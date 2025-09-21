@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Browser ZIP Unzipper</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;margin:0}
+    body{padding:20px;max-width:980px;margin:20px auto;color:#111}
+    h1{font-size:1.4rem;margin:0 0 10px}
+    .card{border:1px solid #e3e3e3;border-radius:10px;padding:14px;margin:10px 0;box-shadow:0 6px 20px rgba(0,0,0,0.02)}
+    .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    #drop{flex:1;min-height:72px;border:2px dashed #cfcfcf;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:10px;text-align:center;background:#fafafa}
+    #filesList{margin-top:12px}
+    .fileRow{display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px solid #f0f0f0}
+    .fileRow:last-child{border-bottom:none}
+    .meta{font-size:0.9rem;color:#444}
+    .btn{border:0;padding:8px 10px;border-radius:8px;cursor:pointer}
+    .btn-primary{background:#0b63d6;color:white}
+    .btn-outline{background:white;border:1px solid #ddd}
+    .preview{margin-top:12px}
+    pre{white-space:pre-wrap;word-break:break-word;background:#111;color:#e6e6e6;padding:10px;border-radius:6px;overflow:auto;max-height:360px}
+    img.preview-img{max-width:100%;height:auto;border-radius:6px;border:1px solid #ddd}
+    small.note{display:block;color:#666;margin-top:6px}
+  </style>
+</head>
+<body>
+  <h1>Browser ZIP Unzipper</h1>
+
+  <div class="card">
+    <div class="controls">
+      <input id="fileInput" type="file" accept=".zip" />
+      <button id="openBtn" class="btn btn-primary">Open ZIP</button>
+      <button id="clearBtn" class="btn btn-outline">Clear</button>
+    </div>
+
+    <div id="drop" class="card" aria-label="Drop ZIP here">
+      Drag & drop a .zip file here, or click "Open ZIP". 
+      <small class="note">All extraction happens locally in your browser — no upload to any server.</small>
+    </div>
+
+    <div id="status" class="meta" style="margin-top:8px"></div>
+    <div id="filesList"></div>
+    <div id="preview" class="preview"></div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script>
+    // Simple browser ZIP reader using JSZip
+    const fileInput = document.getElementById('fileInput');
+    const openBtn = document.getElementById('openBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const drop = document.getElementById('drop');
+    const filesList = document.getElementById('filesList');
+    const preview = document.getElementById('preview');
+    const status = document.getElementById('status');
+
+    function setStatus(txt) { status.textContent = txt; }
+
+    function clearUI(){
+      filesList.innerHTML = '';
+      preview.innerHTML = '';
+      setStatus('');
+    }
+
+    clearBtn.addEventListener('click', clearUI);
+
+    openBtn.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', e => {
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+      handleZipFile(f);
+    });
+
+    ;['dragenter','dragover'].forEach(e => {
+      drop.addEventListener(e, ev => {
+        ev.preventDefault(); ev.stopPropagation();
+        drop.style.borderColor = '#6aa3ff';
+        drop.style.background = '#f5fbff';
+      });
+    });
+
+    ;['dragleave','drop'].forEach(e => {
+      drop.addEventListener(e, ev => {
+        ev.preventDefault(); ev.stopPropagation();
+        drop.style.borderColor = '#cfcfcf';
+        drop.style.background = '#fafafa';
+      });
+    });
+
+    drop.addEventListener('drop', ev => {
+      const f = ev.dataTransfer.files && ev.dataTransfer.files[0];
+      if (!f) return;
+      if (!f.name.toLowerCase().endsWith('.zip')) {
+        alert('Please drop a .zip file');
+        return;
+      }
+      handleZipFile(f);
+    });
+
+    async function handleZipFile(file){
+      clearUI();
+      setStatus('Reading ZIP file...');
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const zip = await JSZip.loadAsync(arrayBuffer);
+        const entries = Object.values(zip.files);
+        setStatus(`ZIP opened — ${entries.length} item(s)`);
+        if (entries.length === 0) return;
+
+        entries.forEach(fileEntry => {
+          const row = document.createElement('div');
+          row.className = 'fileRow';
+
+          const left = document.createElement('div');
+          left.innerHTML = `<div style="font-weight:600">${fileEntry.name}</div>
+                            <div class="meta">${fileEntry.dir ? 'Folder' : (fileEntry._data && fileEntry._data.uncompressedSize ? (fileEntry._data.uncompressedSize + ' bytes') : '')}</div>`;
+
+          const right = document.createElement('div');
+
+          if (!fileEntry.dir) {
+            const previewBtn = document.createElement('button');
+            previewBtn.textContent = 'Preview';
+            previewBtn.className = 'btn btn-outline';
+            previewBtn.addEventListener('click', async () => {
+              preview.innerHTML = '<div class="meta">Generating preview…</div>';
+              await showPreview(fileEntry);
+            });
+
+            const downloadBtn = document.createElement('button');
+            downloadBtn.textContent = 'Download';
+            downloadBtn.className = 'btn btn-primary';
+            downloadBtn.style.marginLeft = '8px';
+            downloadBtn.addEventListener('click', async () => {
+              const blob = await fileEntry.async('blob');
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = fileEntry.name.split('/').pop();
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              setTimeout(()=>URL.revokeObjectURL(url), 15000);
+            });
+
+            right.appendChild(previewBtn);
+            right.appendChild(downloadBtn);
+          } else {
+            right.innerHTML = `<span class="meta">Folder</span>`;
+          }
+
+          row.appendChild(left);
+          row.appendChild(right);
+          filesList.appendChild(row);
+        });
+
+      } catch (err) {
+        console.error(err);
+        alert('Error reading zip: ' + (err && err.message ? err.message : err));
+        setStatus('Error opening ZIP');
+      }
+    }
+
+    async function showPreview(fileEntry) {
+      preview.innerHTML = '';
+      try {
+        // try to infer type from extension
+        const name = fileEntry.name.toLowerCase();
+        const ext = name.split('.').pop();
+
+        // text-like previews
+        const textExts = ['txt','md','json','js','css','html','xml','csv','py','java','c','cpp','sh','sql'];
+        const imageExts = ['png','jpg','jpeg','gif','bmp','webp','svg'];
+
+        if (textExts.includes(ext)) {
+          const text = await fileEntry.async('text');
+          const pre = document.createElement('pre');
+          pre.textContent = text;
+          preview.appendChild(pre);
+        } else if (imageExts.includes(ext)) {
+          const blob = await fileEntry.async('blob');
+          const url = URL.createObjectURL(blob);
+          const img = document.createElement('img');
+          img.src = url;
+          img.className = 'preview-img';
+          preview.appendChild(img);
+          // revoke later
+          setTimeout(()=>URL.revokeObjectURL(url), 15000);
+        } else {
+          // For binaries, offer a download link and show metadata
+          const info = document.createElement('div');
+          info.innerHTML = `<div class="meta">No inline preview available for .${ext} files.</div>`;
+          const dl = document.createElement('button');
+          dl.className = 'btn btn-primary';
+          dl.textContent = 'Download file';
+          dl.style.marginTop = '10px';
+          dl.addEventListener('click', async () => {
+            const blob = await fileEntry.async('blob');
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileEntry.name.split('/').pop();
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(()=>URL.revokeObjectURL(url), 15000);
+          });
+          preview.appendChild(info);
+          preview.appendChild(dl);
+        }
+      } catch (err) {
+        preview.innerHTML = '<div class="meta">Preview failed: ' + (err && err.message ? err.message : err) + '</div>';
+      }
+    }
+  </script>
+</body>
+</html>
