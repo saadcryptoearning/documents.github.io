@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Money Receipt Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Cossette+Titre:wght@400&family=Tiro+Bangla:wght@400&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@mindblowing/snapdom"></script>
+    
+    <style>
+        body {
+            font-family: 'Montserrat', Arial, sans-serif;
+            text-align: center;
+            background: #111827;
+            color: white;
+        }
+
+        .receipt-container {
+            position: relative;
+            display: inline-block;
+            width: 800px;
+            height: auto;
+        }
+
+        .receipt-container img {
+            width: 800px;
+            height: auto;
+            display: block;
+        }
+
+        .field {
+            position: absolute;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: black;
+            white-space: nowrap;
+            z-index: 5;
+        }
+
+        /* Positioning text on receipt - matched to MR.jpg template */
+        #no { top: 107px; left: 80px; font-size: 16px; font-weight: 700; }
+        #date { top: 109px; right: 60px; font-size: 16px; font-weight: 700; }
+        #from { top: 170px; left: 300px; font-size: 18px; font-weight: 500; }
+        #amount { top: 205px; left: 130px; font-size: 18px; font-weight: 700; }
+        #inword { top: 240px; left: 130px; font-size: 16px; font-weight: 500; }
+        #for { top: 275px; left: 80px; font-size: 16px; font-weight: 500; }
+        #acct { top: 307px; left:100px; font-size: 16px; font-weight: 500; }
+        #paid { top: 307px; left: 250px; font-size: 16px; font-weight: 500; }
+        
+        /* Red date positioned below MONEY RECEIPT title */
+        #center-date {
+            position: absolute;
+            top: 219px;
+            left: 75%;
+            transform: translateX(-50%) rotate(-30deg);
+            font-family: 'Cossette Titre', Arial, sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            color: red;
+            text-align: center;
+            white-space: nowrap;
+            z-index: 10;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            letter-spacing: 1px;
+        }
+
+        .form-fields {
+            margin-top: 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .form-fields input {
+            margin: 5px;
+            padding: 8px 12px;
+            width: 250px;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            border: 2px solid #555;
+            border-radius: 6px;
+            background: #333;
+            color: white;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-fields input::placeholder {
+            color: #ccc;
+        }
+
+        .form-fields input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        .form-fields select {
+            margin: 5px;
+            padding: 8px 12px;
+            width: 250px;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            border: 2px solid #555;
+            border-radius: 6px;
+            transition: border-color 0.3s ease;
+            background: #333;
+            color: white;
+            cursor: pointer;
+        }
+
+        .form-fields select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        .form-fields select:hover {
+            border-color: #777;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 12px 24px;
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            background: green;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .document-buttons {
+            margin-bottom: 30px;
+        }
+
+        .doc-btn {
+            margin: 5px;
+            padding: 10px 20px;
+            background: #333;
+            color: white;
+            border: 2px solid #555;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .doc-btn.active {
+            background: #007bff;
+            border-color: #007bff;
+        }
+
+        .doc-btn:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+    <h2 style="font-family: 'Montserrat', Arial, sans-serif; font-weight: 700; color: white; margin-bottom: 20px;">Document Generator</h2>
+    
+    <!-- Document Type Buttons -->
+    <div class="document-buttons">
+        <button class="doc-btn active" onclick="showDocument('moneyreceipt')">Money Receipt</button>
+    </div>
+
+    <!-- Receipt Preview -->
+    <div class="receipt-container" id="receipt" style="display: block;">
+        <img src="MR.jpg" alt="Receipt Template">
+        <div class="field" id="no"></div>
+        <div class="field" id="date"></div>
+        <div class="field" id="from"></div>
+        <div class="field" id="amount"></div>
+        <div class="field" id="inword"></div>
+        <div class="field" id="for"></div>
+        <div class="field" id="acct"></div>
+        <div class="field" id="paid"></div>
+        <div class="field" id="center-date"></div>
+    </div>
+
+    <!-- Form Fields -->
+    <div class="form-fields" id="money-receipt-fields" style="display: block;">
+        <input type="text" placeholder="Receipt No" oninput="updateField('no', this.value)">
+        <input type="text" placeholder="Date" oninput="updateField('date', this.value)"><br>
+        <input type="text" placeholder="Received From" oninput="updateField('from', this.value)">
+        <input type="text" placeholder="Amount" oninput="updateField('amount', this.value + ' BDT')"><br>
+        <input type="text" placeholder="In Word" oninput="updateField('inword', this.value)">
+        <select onchange="updateField('for', this.value)">
+            <option value="">Select For?</option>
+            <option value="Govt. vat">Govt. vat</option>
+            <option value="Transfer fee">Transfer fee</option>
+            <option value="Insurance fee">Insurance fee</option>
+            <option value="Stamp fee">Stamp fee</option>
+            <option value="Fault fee">Fault fee</option>
+            <option value="Bank fee">Bank fee</option>
+            <option value="Bank charge">Bank charge</option>
+            <option value="Others">Others</option>
+        </select>
+        <select onchange="updateField('acct', this.value)">
+            <option value="">Method</option>
+            <option value="bKash">bKash</option>
+            <option value="Nagad">Nagad</option>
+            <option value="Bank">Bank</option>
+            <option value="Rocket">Rocket</option>
+        </select>
+        <input type="text" placeholder="Paid" oninput="updateField('paid', this.value + ' BDT')"><br>
+        <input type="text" placeholder="Center Date (e.g., 22 JUN 2025)" oninput="updateField('center-date', this.value)" style="color: red; font-weight: bold;"><br>
+        <button onclick="downloadReceipt()">Download PNG</button>
+    </div>
+
+    <script>
+        function showDocument(docType) {
+            // Hide all document templates
+            const receipt = document.getElementById('receipt');
+            const moneyReceiptFields = document.getElementById('money-receipt-fields');
+            
+            // Hide all templates and forms
+            moneyReceiptFields.style.display = 'none';
+            receipt.style.display = 'none';
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.doc-btn').forEach(btn => btn.classList.remove('active'));
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+            
+            if (docType === 'moneyreceipt') {
+                // Show Money Receipt
+                receipt.style.display = 'block';
+                moneyReceiptFields.style.display = 'block';
+            }
+        }
+
+        function updateField(id, value) {
+            document.getElementById(id).innerText = value;
+        }
+
+        function downloadReceipt() {
+            const receipt = document.getElementById('receipt');
+            
+            // Use SnapDOM to capture the receipt as an image
+            snapdom.toPng(receipt, {
+                scale: 2, // High resolution
+                backgroundColor: '#ffffff',
+                quality: 1.0
+            }).then(img => {
+                // Create download link
+                const a = document.createElement('a');
+                a.href = img.src;
+                a.download = 'receipt.png';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }).catch(error => {
+                console.error('SnapDOM error:', error);
+                alert('Error generating receipt: ' + error.message);
+            });
+        }
+
+        function smartCropCanvas(canvas) {
+            const ctx = canvas.getContext('2d');
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            
+            let minX = canvas.width;
+            let minY = canvas.height;
+            let maxX = 0;
+            let maxY = 0;
+            
+            // Find content boundaries
+            for (let y = 0; y < canvas.height; y++) {
+                for (let x = 0; x < canvas.width; x++) {
+                    const index = (y * canvas.width + x) * 4;
+                    const r = data[index];
+                    const g = data[index + 1];
+                    const b = data[index + 2];
+                    const a = data[index + 3];
+                    
+                    // Check if pixel is not white/transparent
+                    if (a > 5 && (r < 240 || g < 240 || b < 240)) {
+                        minX = Math.min(minX, x);
+                        minY = Math.min(minY, y);
+                        maxX = Math.max(maxX, x);
+                        maxY = Math.max(maxY, y);
+                    }
+                }
+            }
+            
+            // Add padding
+            const padding = 10;
+            minX = Math.max(0, minX - padding);
+            minY = Math.max(0, minY - padding);
+            maxX = Math.min(canvas.width, maxX + padding);
+            maxY = Math.min(canvas.height, maxY + padding);
+            
+            // Create cropped canvas
+            const cropped = document.createElement('canvas');
+            const ctx2 = cropped.getContext('2d');
+            cropped.width = maxX - minX;
+            cropped.height = maxY - minY;
+            
+            ctx2.drawImage(canvas, minX, minY, cropped.width, cropped.height, 0, 0, cropped.width, cropped.height);
+            
+            return cropped;
+        }
+    </script>
+</body>
+</html>

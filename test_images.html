@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .image-test {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+        }
+        .image-test h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .image-display {
+            margin: 10px 0;
+            text-align: center;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Image Loading Test</h1>
+        <p>This page tests if the ID card and stamp images are loading correctly.</p>
+        
+        <div class="image-test">
+            <h3>ID Card Image (idc.png)</h3>
+            <div class="image-display">
+                <img src="idc.png" alt="ID Card" style="max-width: 300px; height: auto; border: 2px solid #ccc;">
+            </div>
+            <div id="idc-status" class="status">Loading...</div>
+        </div>
+        
+        <div class="image-test">
+            <h3>Stamp Image (stamp.JPG)</h3>
+            <div class="image-display">
+                <img src="stamp.JPG" alt="Stamp" style="max-width: 300px; height: auto; border: 2px solid #ccc;">
+            </div>
+            <div id="stamp-status" class="status">Loading...</div>
+        </div>
+        
+        <div class="image-test">
+            <h3>Background Test (ID Card)</h3>
+            <div style="width: 200px; height: 300px; background: url('idc.png') center center / cover no-repeat; border: 2px solid #ccc; margin: 10px auto;"></div>
+            <div id="bg-idc-status" class="status">Loading...</div>
+        </div>
+        
+        <div class="image-test">
+            <h3>Background Test (Stamp)</h3>
+            <div style="width: 200px; height: 300px; background: url('stamp.JPG') center center / cover no-repeat; border: 2px solid #ccc; margin: 10px auto;"></div>
+            <div id="bg-stamp-status" class="status">Loading...</div>
+        </div>
+    </div>
+
+    <script>
+        // Test image loading
+        function testImage(src, statusId) {
+            const img = new Image();
+            const status = document.getElementById(statusId);
+            
+            img.onload = function() {
+                status.textContent = '✅ Image loaded successfully!';
+                status.className = 'status success';
+            };
+            
+            img.onerror = function() {
+                status.textContent = '❌ Failed to load image: ' + src;
+                status.className = 'status error';
+            };
+            
+            img.src = src;
+        }
+        
+        // Test background image loading
+        function testBackgroundImage(src, statusId) {
+            const testDiv = document.createElement('div');
+            testDiv.style.backgroundImage = `url('${src}')`;
+            testDiv.style.width = '1px';
+            testDiv.style.height = '1px';
+            testDiv.style.position = 'absolute';
+            testDiv.style.left = '-9999px';
+            document.body.appendChild(testDiv);
+            
+            const status = document.getElementById(statusId);
+            
+            // Check if background image loaded
+            setTimeout(() => {
+                const computedStyle = window.getComputedStyle(testDiv);
+                const bgImage = computedStyle.backgroundImage;
+                
+                if (bgImage && bgImage !== 'none' && !bgImage.includes('data:')) {
+                    status.textContent = '✅ Background image loaded successfully!';
+                    status.className = 'status success';
+                } else {
+                    status.textContent = '❌ Failed to load background image: ' + src;
+                    status.className = 'status error';
+                }
+                
+                document.body.removeChild(testDiv);
+            }, 1000);
+        }
+        
+        // Run tests when page loads
+        window.onload = function() {
+            testImage('idc.png', 'idc-status');
+            testImage('stamp.JPG', 'stamp-status');
+            testBackgroundImage('idc.png', 'bg-idc-status');
+            testBackgroundImage('stamp.JPG', 'bg-stamp-status');
+        };
+    </script>
+</body>
+</html>

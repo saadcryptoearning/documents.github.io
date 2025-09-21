@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Money Receipt Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Cossette+Titre:wght@400&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@mindblowing/snapdom"></script>
+  <!-- Auto Login Script - Prevents redirect to login page -->
+  <script>
+  // Auto Login Script - Prevents redirect to login page
+  (function() {
+      'use strict';
+      
+      // Function to set fake admin info in localStorage
+      function setAutoLogin() {
+          const adminInfo = {
+              id: 'auto-user',
+              name: 'Auto User',
+              email: 'auto@user.com',
+              role: 'Admin',
+              token: 'auto-login-token-' + Date.now(),
+              loginTime: new Date().toISOString()
+          };
+          
+          // Set the admin info in localStorage
+          localStorage.setItem('adminInfo', JSON.stringify(adminInfo));
+          console.log('Auto login set successfully');
+      }
+      
+      // Function to check and prevent redirects
+      function preventRedirects() {
+          // Override the redirect function if it exists
+          if (typeof window !== 'undefined') {
+              // Store original redirect function
+              const originalRedirect = window.location.redirect;
+              
+              // Override redirect to prevent login redirects
+              window.location.redirect = function(url) {
+                  if (url && url.includes('/login')) {
+                      console.log('Prevented redirect to login page');
+                      return false;
+                  }
+                  if (originalRedirect) {
+                      return originalRedirect.call(this, url);
+                  }
+              };
+              
+              // Override window.location.href setter
+              let originalHref = window.location.href;
+              Object.defineProperty(window.location, 'href', {
+                  get: function() {
+                      return originalHref;
+                  },
+                  set: function(url) {
+                      if (url && url.includes('/login')) {
+                          console.log('Prevented navigation to login page');
+                          return;
+                      }
+                      originalHref = url;
+                      if (url !== window.location.href) {
+                          window.location.assign(url);
+                      }
+                  }
+              });
+          }
+      }
+      
+      // Function to intercept fetch requests that might redirect
+      function interceptRequests() {
+          if (typeof fetch !== 'undefined') {
+              const originalFetch = window.fetch;
+              window.fetch = function(...args) {
+                  return originalFetch.apply(this, args).then(response => {
+                      // Check if response is trying to redirect to login
+                      if (response.redirected && response.url.includes('/login')) {
+                          console.log('Intercepted fetch redirect to login');
+                          return new Response(response.body, {
+                              status: 200,
+                              statusText: 'OK',
+                              headers: response.headers
+                          });
+                      }
+                      return response;
+                  });
+              };
+          }
+      }
+      
+      // Function to monitor for authentication checks
+      function monitorAuthChecks() {
+          // Override common authentication patterns
+          const authPatterns = [
+              'localStorage.getItem("adminInfo")',
+              'localStorage.getItem("user")',
+              'localStorage.getItem("token")',
+              'sessionStorage.getItem("adminInfo")',
+              'sessionStorage.getItem("user")',
+              'sessionStorage.getItem("token")'
+          ];
+          
+          // Set up a mutation observer to watch for script changes
+          if (typeof MutationObserver !== 'undefined') {
+              const observer = new MutationObserver(function(mutations) {
+                  mutations.forEach(function(mutation) {
+                      if (mutation.type === 'childList') {
+                          mutation.addedNodes.forEach(function(node) {
+                              if (node.nodeType === 1 && node.tagName === 'SCRIPT') {
+                                  // Check if script contains auth logic
+                                  if (node.textContent && node.textContent.includes('adminInfo')) {
+                                      console.log('Detected auth script, applying auto-login');
+                                      setAutoLogin();
+                                  }
+                              }
+                          });
+                      }
+                  });
+              });
+              
+              observer.observe(document.body || document.documentElement, {
+                  childList: true,
+                  subtree: true
+              });
+          }
+      }
+      
+      // Main initialization
+      function init() {
+          console.log('Auto-login script initialized');
+          
+          // Set auto login immediately
+          setAutoLogin();
+          
+          // Prevent redirects
+          preventRedirects();
+          
+          // Intercept requests
+          interceptRequests();
+          
+          // Monitor for auth checks
+          monitorAuthChecks();
+          
+          // Set up periodic refresh of login data
+          setInterval(function() {
+              setAutoLogin();
+          }, 30000); // Refresh every 30 seconds
+          
+          // Override any existing authentication checks
+          if (typeof window !== 'undefined') {
+              // Override redirect function globally
+              window.redirect = function(url) {
+                  if (url && url.includes('/login')) {
+                      console.log('Prevented redirect to login page');
+                      return false;
+                  }
+                  if (url) {
+                      window.location.href = url;
+                  }
+              };
+          }
+      }
+      
+      // Run when DOM is ready
+      if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', init);
+      } else {
+          init();
+      }
+      
+      // Also run immediately
+      init();
+      
+  })();
+  </script>
+  <style>
+    body {
+      font-family: 'Montserrat', Arial, sans-serif;
+      text-align: center;
+      background: #111827;
+      color: white;
+    }
+
+    .receipt-container {
+      position: relative;
+      display: inline-block;
+    }
+
+    .receipt-container img {
+      width: 800px; /* adjust as needed */
+    }
+
+    .field {
+      position: absolute;
+      font-family: 'Montserrat', Arial, sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: black;
+      white-space: nowrap;
+    }
+
+    /* Positioning text on receipt - matched to MR.jpg template */
+    #no { top: 107px; left: 80px; font-size: 16px; font-weight: 700; }
+    #date { top: 109px; right: 60px; font-size: 16px; font-weight: 700; }
+    #from { top: 170px; left: 300px; font-size: 18px; font-weight: 500; }
+    #amount { top: 205px; left: 130px; font-size: 18px; font-weight: 700; }
+    #inword { top: 240px; left: 130px; font-size: 16px; font-weight: 500; }
+    #for { top: 275px; left: 80px; font-size: 16px; font-weight: 500; }
+    #acct { top: 307px; left:100px; font-size: 16px; font-weight: 500; }
+    #paid { top: 307px; left: 250px; font-size: 16px; font-weight: 500; }
+    
+    /* Red date positioned below MONEY RECEIPT title */
+    #center-date {
+      position: absolute;
+      top: 219px;
+      left: 75%;
+      transform: translateX(-50%) rotate(-30deg);
+      font-family: 'Cossette Titre', Arial, sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: red;
+      text-align: center;
+      white-space: nowrap;
+      z-index: 10;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+      letter-spacing: 1px;
+    }
+
+    .form-fields {
+      margin-top: 20px;
+    }
+
+    .form-fields input {
+      margin: 5px;
+      padding: 8px 12px;
+      width: 250px;
+      font-family: 'Montserrat', Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      border: 2px solid #555;
+      border-radius: 6px;
+      background: #333;
+      color: white;
+      transition: border-color 0.3s ease;
+    }
+
+    .form-fields input::placeholder {
+      color: #ccc;
+    }
+
+    .form-fields input:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    }
+
+    .form-fields select {
+      margin: 5px;
+      padding: 8px 12px;
+      width: 250px;
+      font-family: 'Montserrat', Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      border: 2px solid #555;
+      border-radius: 6px;
+      transition: border-color 0.3s ease;
+      background: #333;
+      color: white;
+      cursor: pointer;
+    }
+
+    .form-fields select:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    }
+
+    .form-fields select:hover {
+      border-color: #777;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 12px 24px;
+      font-family: 'Montserrat', Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      background: green;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    button:hover {
+      background: #0056b3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* Document Type Buttons */
+    .document-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    .doc-btn {
+      padding: 10px 20px;
+      font-family: 'Montserrat', Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      background: #333333;
+      color: white;
+      border: 2px solid #555555;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .doc-btn:hover {
+      background: #555555;
+      border-color: #777777;
+      transform: translateY(-2px);
+    }
+
+    .doc-btn.active {
+      background: #007bff;
+      color: white;
+      border-color: #007bff;
+    }
+
+    .doc-btn.active:hover {
+      background: #0056b3;
+      border-color: #0056b3;
+    }
+
+    /* Empty document templates */
+    .empty-document {
+      display: none;
+      text-align: center;
+      padding: 60px 20px;
+      background: #1a1a1a;
+      border: 2px dashed #555555;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+
+    .empty-document h3 {
+      font-family: 'Montserrat', Arial, sans-serif;
+      font-weight: 600;
+      color: white;
+      margin-bottom: 10px;
+    }
+
+    .empty-document p {
+      font-family: 'Montserrat', Arial, sans-serif;
+      color: #cccccc;
+      font-size: 14px;
+    }
+
+    /* Transaction Document Styling */
+    .transaction-display-container {
+      text-align: center;
+      margin: 20px 0;
+      padding: 0 20px;
+      max-width: 100%;
+      overflow-x: auto;
+    }
+
+    .transaction-container {
+      position: relative;
+      display: inline-block;
+      max-width: 100%;
+      overflow: hidden;
+    }
+
+    .transaction-container .field {
+      position: absolute;
+      font-family: 'Montserrat', Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: #000;
+      white-space: nowrap;
+    }
+
+    /* Transaction Field Positioning - Scaled for 500px max width */
+    #transaction-type { top: 133px; left: 167px; font-size: 20px; font-weight: 500; }
+    #transaction-id { top: 265px; left: 177px; font-size: 20px; font-weight: 500; }
+    #transaction-date { top: 300px; left: 80px; font-size: 20px; font-weight: 500; }
+    #from-bank { top: 196px; left: 167px; font-size: 20px; font-weight: 500; }
+    #to-bank { top: 370px; left: 110px; font-size: 20px; font-weight: 500; }
+    #from-account { top: 406px; left: 169px; font-size: 20px; font-weight: 500; }
+    #to-account { top: 440px; left: 142px; font-size: 20px; font-weight: 500; }
+    #account-name { top: 475px; left: 182px; font-size: 20px; font-weight: 500; }
+    #mobile-banking { top: 301px; left: 167px; font-size: 20px; font-weight: 500; }
+    #transaction-amount { top: 510px; left: 110px; font-size: 20px; font-weight: 500; }
+    #depositor-name { top: 343px; left: 167px; font-size: 20px; font-weight: 500; }
+    #generated-time { top: 580px; left: 195px; font-size: 20px; font-weight: 500; }
+    
+    /* Transaction Center Date - positioned in center like money receipt */
+    #transaction-center-date {
+      position: absolute;
+      top: 500px;
+      left: 77%;
+      transform: translateX(-50%) rotate(0deg);
+      font-family: 'Montserrat', Arial, sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: red;
+      text-align: center;
+      white-space: nowrap;
+      z-index: 10;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2 style="font-family: 'Montserrat', Arial, sans-serif; font-weight: 700; color: white; margin-bottom: 20px;">Document Generator</h2>
+  
+  <!-- Document Type Buttons -->
+  <div class="document-buttons">
+    <button class="doc-btn" onclick="showDocument('transaction')">Transaction</button>
+    <button class="doc-btn active" onclick="showDocument('moneyreceipt')">Money Receipt</button>
+  </div>
+
+  <!-- Receipt Preview -->
+  <div class="receipt-container" id="receipt">
+    <img src="MR.jpg" alt="Receipt Template">
+    <div class="field" id="no"></div>
+    <div class="field" id="date"></div>
+    <div class="field" id="from"></div>
+    <div class="field" id="amount"></div>
+    <div class="field" id="inword"></div>
+    <div class="field" id="for"></div>
+    <div class="field" id="acct"></div>
+    <div class="field" id="paid"></div>
+    <div class="field" id="center-date"></div>
+  </div>
+
+  <!-- Form Fields -->
+  <div class="form-fields" id="money-receipt-fields">
+    <input type="text" placeholder="Receipt No" oninput="updateField('no', this.value)">
+    <input type="text" placeholder="Date" oninput="updateField('date', this.value)"><br>
+    <input type="text" placeholder="Received From" oninput="updateField('from', this.value)">
+    <input type="text" placeholder="Amount" oninput="updateField('amount', this.value + ' BDT')"><br>
+    <input type="text" placeholder="In Word" oninput="updateField('inword', this.value)">
+    <select class="w-full p-2 border rounded focus:outline-none" onchange="updateField('for', this.value)" style="margin: 5px; padding: 8px 12px; width: 250px; font-family: 'Montserrat', Arial, sans-serif; font-size: 14px; font-weight: 500; border: 2px solid #ddd; border-radius: 6px; transition: border-color 0.3s ease;">
+      <option value="">Select For?</option>
+      <option value="Govt. vat">Govt. vat</option>
+      <option value="Transfer fee">Transfer fee</option>
+      <option value="Insurance fee">Insurance fee</option>
+      <option value="Stamp fee">Stamp fee</option>
+      <option value="Fault fee">Fault fee</option>
+      <option value="Bank fee">Bank fee</option>
+      <option value="Bank charge">Bank charge</option>
+      <option value="Others">Others</option>
+    </select><br>
+    <select class="w-full p-2 border rounded focus:outline-none" onchange="updateField('acct', this.value)" style="margin: 5px; padding: 8px 12px; width: 250px; font-family: 'Montserrat', Arial, sans-serif; font-size: 14px; font-weight: 500; border: 2px solid #ddd; border-radius: 6px; transition: border-color 0.3s ease;">
+      <option value="">Method</option>
+      <option value="bKash">bKash</option>
+      <option value="Nagad">Nagad</option>
+      <option value="Bank">Bank</option>
+      <option value="Rocket">Rocket</option>
+    </select>
+    <input type="text" placeholder="Paid" oninput="updateField('paid', this.value + ' BDT')"><br>
+    <input type="text" placeholder="Center Date (e.g., 22 JUN 2025)" oninput="updateField('center-date', this.value)" style="color: red; font-weight: bold;"><br>
+    <button onclick="downloadReceipt()">Download PNG</button>
+    <button onclick="saveToServer()" style="margin-left: 10px; background: orange;">Save to Server</button>
+    <button onclick="downloadAsHTML()" style="margin-left: 10px; background: blue;">Download HTML</button>
+  </div>
+
+
+
+  <!-- New Transaction Document Display -->
+  <div class="transaction-display-container" id="transaction-display" style="display: none;">
+    <div class="transaction-container">
+      <img src="wbb.png" alt="Transaction Template" style="width: 100%; max-width: 500px; height: auto;">
+      
+      <!-- Transaction Fields positioned based on wbb.png template -->
+      <div class="field" id="transaction-type"></div>
+      <div class="field" id="transaction-id"></div>
+      <div class="field" id="transaction-date"></div>
+      <div class="field" id="from-bank"></div>
+      <div class="field" id="to-bank"></div>
+      <div class="field" id="from-account"></div>
+      <div class="field" id="to-account"></div>
+      <div class="field" id="account-name"></div>
+      <div class="field" id="mobile-banking"></div>
+      <div class="field" id="transaction-amount"></div>
+      <div class="field" id="depositor-name"></div>
+      <div class="field" id="generated-time"></div>
+      <div class="field" id="transaction-center-date"></div>
+    </div>
+  </div>
+
+  <!-- New Transaction Form Fields -->
+  <div class="form-fields" id="transaction-fields" style="display: none;">
+    <h3 style="color: white; margin-bottom: 15px;">Transaction Details</h3>
+    <input type="text" placeholder="Transaction ID" oninput="updateField('transaction-id', this.value)"><br>
+    <input type="text" placeholder="Date" oninput="updateField('transaction-date', this.value)"><br>
+    <input type="text" placeholder="To Bank" oninput="updateField('to-bank', this.value)"><br>
+    <input type="text" placeholder="From Account" oninput="updateField('from-account', this.value)"><br>
+    <input type="text" placeholder="To Account" oninput="updateField('to-account', this.value)"><br>
+    <input type="text" placeholder="Account Name" oninput="updateField('account-name', this.value)"><br>
+    <input type="text" placeholder="Amount" oninput="updateField('transaction-amount', this.value + ' BDT')"><br>
+    <input type="text" placeholder="Generated Time" oninput="updateField('generated-time', this.value)"><br>
+    <input type="text" placeholder="Center Date (e.g., 22 JUN 2025)" oninput="updateField('transaction-center-date', this.value)" style="color: red; font-weight: bold;"><br>
+    <button onclick="downloadTransaction()">Download Transaction PNG</button>
+    <button onclick="saveTransactionToServer()" style="margin-left: 10px; background: orange;">Save Transaction to Server</button>
+  </div>
+
+
+  <script>
+    function showDocument(docType) {
+      // Hide all document templates
+      const receipt = document.getElementById('receipt');
+      const moneyReceiptFields = document.getElementById('money-receipt-fields');
+      const transactionFields = document.getElementById('transaction-fields');
+      const transactionDisplay = document.getElementById('transaction-display');
+      const templates = document.querySelectorAll('.empty-document');
+      
+      // Hide all templates and forms
+      templates.forEach(template => template.style.display = 'none');
+      moneyReceiptFields.style.display = 'none';
+      transactionFields.style.display = 'none';
+      transactionDisplay.style.display = 'none';
+      receipt.style.display = 'none';
+      
+      // Remove active class from all buttons
+      document.querySelectorAll('.doc-btn').forEach(btn => btn.classList.remove('active'));
+      
+      // Add active class to clicked button
+      event.target.classList.add('active');
+      
+      if (docType === 'moneyreceipt') {
+        // Show Money Receipt
+        receipt.style.display = 'block';
+        moneyReceiptFields.style.display = 'block';
+      } else if (docType === 'transaction') {
+        // Show Transaction
+        transactionDisplay.style.display = 'block';
+        transactionFields.style.display = 'block';
+      } else {
+        // Show empty template
+        document.getElementById(docType + '-template').style.display = 'block';
+      }
+    }
+
+    
+
+    function updateField(id, value) {
+      document.getElementById(id).innerText = value;
+    }
+
+    function downloadTransaction() {
+      const button = document.querySelector('button[onclick="downloadTransaction()"]');
+      const originalText = button.textContent;
+      
+      try {
+        button.textContent = "Generating...";
+        button.disabled = true;
+        
+        // Convert image to data URL first to avoid tainted canvas
+        const img = document.querySelector('#transaction-display img');
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Set canvas size to match image
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        
+        // Draw image to canvas
+        ctx.drawImage(img, 0, 0);
+        
+        // Get image data URL
+        const imgDataURL = canvas.toDataURL('image/png');
+        
+        // Create a new image element with data URL
+        const newImg = new Image();
+        newImg.onload = function() {
+          // Replace the original image with the data URL version
+          img.src = imgDataURL;
+          
+          // Use SnapDOM to capture the transaction display as an image
+          setTimeout(() => {
+            snapdom.toPng(document.getElementById("transaction-display"), {
+              scale: 2, // High resolution
+              backgroundColor: '#ffffff',
+              quality: 1.0
+            }).then(img => {
+              // Create download link
+              const link = document.createElement('a');
+              link.href = img.src;
+              link.download = 'transaction_summary.png';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              
+              // Reset button
+              button.textContent = originalText;
+              button.disabled = false;
+            }).catch(error => {
+              console.error('SnapDOM error:', error);
+              alert('Error generating document: ' + error.message);
+              button.textContent = originalText;
+              button.disabled = false;
+            });
+          }, 100);
+        };
+        newImg.src = imgDataURL;
+        
+      } catch (error) {
+        console.error('Function error:', error);
+        alert('Download function error. Please try again.');
+        button.textContent = originalText;
+        button.disabled = false;
+      }
+    }
+
+    function saveTransactionToServer() {
+      const button = document.querySelector('button[onclick="saveTransactionToServer()"]');
+      const originalText = button.textContent;
+      
+      try {
+        button.textContent = "Saving...";
+        button.disabled = true;
+        
+        // Capture transaction data
+        const transactionData = {
+          transaction_type: document.getElementById('transaction-type').innerText,
+          transaction_id: document.getElementById('transaction-id').innerText,
+          transaction_date: document.getElementById('transaction-date').innerText,
+          from_bank: document.getElementById('from-bank').innerText,
+          to_bank: document.getElementById('to-bank').innerText,
+          from_account: document.getElementById('from-account').innerText,
+          to_account: document.getElementById('to-account').innerText,
+          account_name: document.getElementById('account-name').innerText,
+          mobile_banking: document.getElementById('mobile-banking').innerText,
+          transaction_amount: document.getElementById('transaction-amount').innerText,
+          depositor_name: document.getElementById('depositor-name').innerText,
+          generated_time: document.getElementById('generated-time').innerText
+        };
+        
+        // Convert image to data URL
+        const img = document.querySelector('#transaction-display img');
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        ctx.drawImage(img, 0, 0);
+        const imgDataURL = canvas.toDataURL('image/png');
+        
+        // Send to server
+        fetch('save_transaction_no_db.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            imageData: imgDataURL,
+            transactionData: transactionData
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('Transaction saved successfully!');
+          } else {
+            alert('Error saving transaction: ' + data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error saving transaction. Please try again.');
+        })
+        .finally(() => {
+          button.textContent = originalText;
+          button.disabled = false;
+        });
+        
+      } catch (error) {
+        console.error('Function error:', error);
+        alert('Save function error. Please try again.');
+        button.textContent = originalText;
+        button.disabled = false;
+      }
+    }
+
+    function downloadReceipt() {
+      const button = document.querySelector('button');
+      const originalText = button.textContent;
+      
+      try {
+        button.textContent = "Generating...";
+        button.disabled = true;
+        
+        // Convert image to data URL first to avoid tainted canvas
+        const img = document.querySelector('#receipt img');
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Set canvas size to match image
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        
+        // Draw image to canvas
+        ctx.drawImage(img, 0, 0);
+        
+        // Get image data URL
+        const imgDataURL = canvas.toDataURL('image/png');
+        
+        // Create a new image element with data URL
+        const newImg = new Image();
+        newImg.onload = function() {
+          // Replace the original image with the data URL version
+          img.src = imgDataURL;
+          
+          // Use SnapDOM to capture the receipt as an image
+          setTimeout(() => {
+            snapdom.toPng(document.getElementById("receipt"), {
+              scale: 2, // High resolution
+              backgroundColor: '#ffffff',
+              quality: 1.0
+            }).then(img => {
+              // Create download link
+              const link = document.createElement('a');
+              link.href = img.src;
+              link.download = 'money_receipt.png';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              
+              // Reset button
+              button.textContent = originalText;
+              button.disabled = false;
+            }).catch(error => {
+              console.error('SnapDOM error:', error);
+              alert('Error generating document: ' + error.message);
+              button.textContent = originalText;
+              button.disabled = false;
+            });
+          }, 100);
+        };
+        newImg.src = imgDataURL;
+        
+      } catch (error) {
+        console.error('Function error:', error);
+        alert('Download function error. Please try the HTML download instead.');
+        button.textContent = originalText;
+        button.disabled = false;
+      }
+    }
+
+    function downloadAsHTML() {
+      const receiptElement = document.getElementById("receipt");
+      const htmlContent = receiptElement.outerHTML;
+      const fullHTML = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Money Receipt</title>
+  <style>
+    body { margin: 0; padding: 20px; background: white; }
+    .receipt-container { position: relative; display: inline-block; }
+    .receipt-container img { width: 800px; }
+    .field { position: absolute; font-size: 16px; font-weight: bold; color: black; white-space: nowrap; }
+    #no { top: 110px; left: 80px; font-size: 16px; }
+    #date { top: 45px; right: 50px; font-size: 16px; }
+    #from { top: 180px; left: 50px; font-size: 16px; }
+    #amount { top: 220px; left: 50px; font-size: 16px; }
+    #inword { top: 260px; left: 50px; font-size: 16px; }
+    #for { top: 300px; left: 50px; font-size: 16px; }
+    #acct { top: 340px; left: 50px; font-size: 16px; }
+    #center-date { position: absolute; top: 130px; left: 50%; transform: translateX(-50%); font-size: 24px; font-weight: bold; color: red; text-align: center; white-space: nowrap; z-index: 10; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+  </style>
+</head>
+<body>
+  ${htmlContent}
+</body>
+</html>`;
+      
+      const blob = new Blob([fullHTML], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'money_receipt.html';
+      document.body.appendChild(link);
+        link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    function saveToServer() {
+      const button = document.querySelector('button[onclick="saveToServer()"]');
+      const originalText = button.textContent;
+      
+      try {
+        button.textContent = "Saving...";
+        button.disabled = true;
+        
+        // Convert image to data URL first to avoid tainted canvas
+        const img = document.querySelector('#receipt img');
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Set canvas size to match image
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        
+        // Draw image to canvas
+        ctx.drawImage(img, 0, 0);
+        
+        // Get image data URL
+        const imgDataURL = canvas.toDataURL('image/png');
+        
+        // Create a new image element with data URL
+        const newImg = new Image();
+        newImg.onload = function() {
+          // Replace the original image with the data URL version
+          img.src = imgDataURL;
+          
+          // Use SnapDOM to capture the receipt as an image
+          setTimeout(() => {
+            snapdom.toPng(document.getElementById("receipt"), {
+              scale: 2, // High resolution
+              backgroundColor: '#ffffff',
+              quality: 1.0
+            }).then(img => {
+              // Get all form data
+              const receiptData = {
+                no: document.getElementById('no').innerText,
+                date: document.getElementById('date').innerText,
+                from: document.getElementById('from').innerText,
+                amount: document.getElementById('amount').innerText,
+                inword: document.getElementById('inword').innerText,
+                for: document.getElementById('for').innerText,
+                acct: document.getElementById('acct').innerText,
+                paid: document.getElementById('paid').innerText,
+                center_date: document.getElementById('center-date').innerText
+              };
+              
+              // Send to server
+              fetch('save_receipt_no_db.php', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  imageData: img.src,
+                  receiptData: receiptData
+                })
+              })
+              .then(response => response.json())
+              .then(data => {
+                if (data.success) {
+                  alert('Receipt saved successfully! File: ' + data.filename);
+                } else {
+                  alert('Error saving receipt: ' + data.error);
+                }
+                button.textContent = originalText;
+                button.disabled = false;
+              })
+              .catch(error => {
+                console.error('Error:', error);
+                alert('Error saving receipt. Please try again.');
+                button.textContent = originalText;
+                button.disabled = false;
+              });
+            }).catch(error => {
+              console.error('SnapDOM error:', error);
+              alert('Error generating receipt. Please try again.');
+              button.textContent = originalText;
+              button.disabled = false;
+            });
+          }, 100);
+        };
+        newImg.src = imgDataURL;
+        
+      } catch (error) {
+        console.error('Function error:', error);
+        alert('Error saving receipt. Please try again.');
+        button.textContent = originalText;
+        button.disabled = false;
+      }
+    }
+  </script>
+
+</body>
+</html>

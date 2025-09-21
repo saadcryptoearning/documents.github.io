@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iframe Embedding Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .iframe-container {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+        }
+        iframe {
+            width: 100%;
+            height: 800px;
+            border: none;
+            display: block;
+        }
+        .controls {
+            margin: 20px 0;
+            text-align: center;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .info {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #007bff;
+        }
+        .code {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+            font-family: monospace;
+            margin: 10px 0;
+            border: 1px solid #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📄 Document Generator - Iframe Embedding Example</h1>
+        
+        <div class="info">
+            <h3>ℹ️ About This Example</h3>
+            <p>This page demonstrates how to embed the Document Generator as an iframe. The iframe below contains the full Document Generator application with all its features.</p>
+        </div>
+
+        <div class="controls">
+            <button onclick="getDocumentData()">📋 Get Document Data</button>
+            <button onclick="setSampleData()">📝 Set Sample Data</button>
+            <button onclick="resizeIframe()">📏 Resize Iframe</button>
+            <button onclick="showCode()">💻 Show Embed Code</button>
+        </div>
+
+        <div class="iframe-container">
+            <iframe id="documentGenerator" src="index.html" title="Document Generator"></iframe>
+        </div>
+
+        <div class="info">
+            <h3>🔧 How to Embed</h3>
+            <p>To embed this Document Generator on your own website, use this HTML code:</p>
+            <div class="code">
+&lt;iframe src="YOUR_DOMAIN/index.html" width="100%" height="800" frameborder="0"&gt;&lt;/iframe&gt;
+            </div>
+            <p><strong>Features:</strong></p>
+            <ul>
+                <li>✅ Automatically resizes based on content</li>
+                <li>✅ Supports all document types (Transaction, Money Receipt, ID Card, etc.)</li>
+                <li>✅ Two-way communication with parent window</li>
+                <li>✅ Mobile-friendly responsive design</li>
+                <li>✅ No iframe restrictions (X-Frame-Options: ALLOWALL)</li>
+            </ul>
+        </div>
+
+        <div id="codeModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000;">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 10px; max-width: 80%; max-height: 80%; overflow: auto;">
+                <h3>📋 Complete Embedding Code</h3>
+                <div class="code">
+&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;Your Website&lt;/title&gt;
+    &lt;style&gt;
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        .iframe-container { border: 2px solid #ddd; border-radius: 8px; overflow: hidden; }
+        iframe { width: 100%; height: 800px; border: none; display: block; }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Document Generator&lt;/h1&gt;
+    &lt;div class="iframe-container"&gt;
+        &lt;iframe src="YOUR_DOMAIN/index.html" title="Document Generator"&gt;&lt;/iframe&gt;
+    &lt;/div&gt;
+    
+    &lt;script&gt;
+        // Listen for iframe messages
+        window.addEventListener('message', function(event) {
+            if (event.data.source === 'money-receipt-generator') {
+                switch (event.data.type) {
+                    case 'iframe-ready':
+                        console.log('Document Generator loaded');
+                        break;
+                    case 'iframe-resize':
+                        document.querySelector('iframe').style.height = event.data.height + 'px';
+                        break;
+                    case 'document-data':
+                        console.log('Document data:', event.data.data);
+                        break;
+                }
+            }
+        });
+        
+        // Send message to iframe
+        function getDocumentData() {
+            document.querySelector('iframe').contentWindow.postMessage({
+                type: 'get-document-data'
+            }, '*');
+        }
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+                </div>
+                <button onclick="closeCodeModal()" style="margin-top: 15px;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const iframe = document.getElementById('documentGenerator');
+        
+        // Listen for messages from iframe
+        window.addEventListener('message', function(event) {
+            if (event.data.source === 'money-receipt-generator') {
+                switch (event.data.type) {
+                    case 'iframe-ready':
+                        console.log('✅ Document Generator loaded successfully');
+                        break;
+                    case 'iframe-resize':
+                        iframe.style.height = event.data.height + 'px';
+                        console.log('📏 Iframe resized to:', event.data.height + 'px');
+                        break;
+                    case 'document-data':
+                        console.log('📋 Document data received:', event.data.data);
+                        alert('Document data received! Check console for details.');
+                        break;
+                }
+            }
+        });
+        
+        // Get current document data from iframe
+        function getDocumentData() {
+            iframe.contentWindow.postMessage({
+                type: 'get-document-data'
+            }, '*');
+        }
+        
+        // Set sample data in iframe
+        function setSampleData() {
+            const sampleData = {
+                'transaction-type': 'Bank Transfer',
+                'transaction-id': 'TXN123456789',
+                'transaction-date': '2024-01-15',
+                'from-bank': 'ABC Bank',
+                'to-bank': 'XYZ Bank',
+                'transaction-amount': '5000 BDT',
+                'account-name': 'John Doe'
+            };
+            
+            iframe.contentWindow.postMessage({
+                type: 'set-document-data',
+                data: sampleData
+            }, '*');
+            
+            alert('Sample data sent to iframe!');
+        }
+        
+        // Manually resize iframe
+        function resizeIframe() {
+            iframe.style.height = '600px';
+            setTimeout(() => {
+                iframe.style.height = '800px';
+            }, 2000);
+        }
+        
+        // Show embed code modal
+        function showCode() {
+            document.getElementById('codeModal').style.display = 'block';
+        }
+        
+        // Close code modal
+        function closeCodeModal() {
+            document.getElementById('codeModal').style.display = 'none';
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('codeModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCodeModal();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,2463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Money Receipt Generator</title>
+  
+  <!-- Allow iframe embedding on any website -->
+  <meta http-equiv="X-Frame-Options" content="ALLOWALL">
+  <meta http-equiv="Content-Security-Policy" content="frame-ancestors *;">
+  <meta name="referrer" content="no-referrer-when-downgrade">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Cossette+Titre:wght@400&family=Tiro+Bangla:wght@400&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script src="https://unpkg.com/@mindblowing/snapdom"></script>
+  
+  <!-- Font preloading for better SnapDOM compatibility -->
+  <style>
+    @font-face {
+      font-family: 'Montserrat';
+      font-style: normal;
+      font-weight: 300 900;
+      font-display: swap;
+      src: url('https://fonts.gstatic.com/s/montserrat/v26/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCtr6Hw5aXpsog.woff2') format('woff2');
+    }
+    @font-face {
+      font-family: 'Cossette Titre';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('https://fonts.gstatic.com/s/cossette/v1/7cHrv4kjSiGqBNFdDkKvZXF8.woff2') format('woff2');
+    }
+    @font-face {
+      font-family: 'Tiro Bangla';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('https://fonts.gstatic.com/s/tirobangla/v1/IFS4HeTSMnJ1Yy4z1Ym8WDW7rFtdD0Qx.woff2') format('woff2');
+    }
+    @font-face {
+      font-family: 'Poppins';
+      font-style: normal;
+      font-weight: 300 700;
+      font-display: swap;
+      src: url('https://fonts.gstatic.com/s/poppins/v20/pxiEyp8kv8JHgFVrJJfecg.woff2') format('woff2');
+    }
+  </style>
+  <!-- Iframe Embedding Support Script -->
+  <script>
+  // Allow iframe embedding and handle iframe-specific functionality
+  (function() {
+      'use strict';
+      
+      // Check if we're in an iframe
+      function isInIframe() {
+          try {
+              return window.self !== window.top;
+          } catch (e) {
+              return true;
+          }
+      }
+      
+      // If in iframe, add iframe-specific styles and functionality
+      if (isInIframe()) {
+          console.log('Running in iframe mode');
+          
+          // Add iframe-specific styles
+          const iframeStyles = document.createElement('style');
+          iframeStyles.textContent = `
+              body {
+                  margin: 0 !important;
+                  padding: 10px !important;
+                  overflow-x: auto;
+              }
+              .receipt-container, .transaction-display-container, .document-container {
+                  max-width: 100% !important;
+                  margin: 0 auto !important;
+              }
+              .form-fields {
+                  max-width: 100% !important;
+                  padding: 10px !important;
+              }
+              .document-buttons {
+                  flex-wrap: wrap !important;
+                  justify-content: center !important;
+                  margin-bottom: 15px !important;
+              }
+              .doc-btn {
+                  margin: 2px !important;
+                  padding: 8px 12px !important;
+                  font-size: 12px !important;
+              }
+          `;
+          document.head.appendChild(iframeStyles);
+          
+          // Notify parent window that iframe is ready
+          if (window.parent !== window) {
+              try {
+                  window.parent.postMessage({
+                      type: 'iframe-ready',
+                      source: 'money-receipt-generator'
+                  }, '*');
+              } catch (e) {
+                  console.log('Could not notify parent window');
+              }
+          }
+      }
+  })();
+  </script>
+  
+  <!-- Auto Login Script - Prevents redirect to login page -->
+  <script>
+  // Font loading check for SnapDOM compatibility
+  (function() {
+      'use strict';
+      
+      // Check if fonts are loaded
+      if (document.fonts && document.fonts.ready) {
+          document.fonts.ready.then(() => {
+              console.log('✅ All fonts loaded successfully');
+          }).catch(() => {
+              console.log('⚠️ Font loading check failed, but continuing...');
+          });
+      }
+  })();
+
+  // Auto Login Script - Prevents redirect to login page
+  (function() {
+      'use strict';
+      
+      // Function to set fake admin info in localStorage
+      function setAutoLogin() {
+          const adminInfo = {
+              id: 'auto-user',
+              name: 'Auto User',
+              email: 'auto@user.com',
+              role: 'Admin',
+              token: 'auto-login-token-' + Date.now(),
+              loginTime: new Date().toISOString()
+          };
+          
+          // Set the admin info in localStorage
+          localStorage.setItem('adminInfo', JSON.stringify(adminInfo));
+          console.log('Auto login set successfully');
+      }
+      
+      // Function to check and prevent redirects
+      function preventRedirects() {
+          // Override the redirect function if it exists
+          if (typeof window !== 'undefined') {
+              // Store original redirect function
+              const originalRedirect = window.location.redirect;
+              
+              // Override redirect to prevent login redirects
+              window.location.redirect = function(url) {
+                  if (url && url.includes('/login')) {
+                      console.log('Prevented redirect to login page');
+                      return false;
+                  }
+                  if (originalRedirect) {
+                      return originalRedirect.call(this, url);
+                  }
+              };
+              
+              // Override window.location.href setter
+              let originalHref = window.location.href;
+              Object.defineProperty(window.location, 'href', {
+                  get: function() {
+                      return originalHref;
+                  },
+                  set: function(url) {
+                      if (url && url.includes('/login')) {
+                          console.log('Prevented navigation to login page');
+                          return;
+                      }
+                      originalHref = url;
+                      if (url !== window.location.href) {
+                          window.location.assign(url);
+                      }
+                  }
+              });
+          }
+      }
+      
+      // Function to intercept fetch requests that might redirect
+      function interceptRequests() {
+          if (typeof fetch !== 'undefined') {
+              const originalFetch = window.fetch;
+              window.fetch = function(...args) {
+                  return originalFetch.apply(this, args).then(response => {
+                      // Check if response is trying to redirect to login
+                      if (response.redirected && response.url.includes('/login')) {
+                          console.log('Intercepted fetch redirect to login');
+                          return new Response(response.body, {
+                              status: 200,
+                              statusText: 'OK',
+                              headers: response.headers
+                          });
+                      }
+                      return response;
+                  });
+              };
+          }
+      }
+      
+      // Function to monitor for authentication checks
+      function monitorAuthChecks() {
+          // Override common authentication patterns
+          const authPatterns = [
+              'localStorage.getItem("adminInfo")',
+              'localStorage.getItem("user")',
+              'localStorage.getItem("token")',
+              'sessionStorage.getItem("adminInfo")',
+              'sessionStorage.getItem("user")',
+              'sessionStorage.getItem("token")'
+          ];
+          
+          // Set up a mutation observer to watch for script changes
+          if (typeof MutationObserver !== 'undefined') {
+              const observer = new MutationObserver(function(mutations) {
+                  mutations.forEach(function(mutation) {
+                      if (mutation.type === 'childList') {
+                          mutation.addedNodes.forEach(function(node) {
+                              if (node.nodeType === 1 && node.tagName === 'SCRIPT') {
+                                  // Check if script contains auth logic
+                                  if (node.textContent && node.textContent.includes('adminInfo')) {
+                                      console.log('Detected auth script, applying auto-login');
+                                      setAutoLogin();
+                                  }
+                              }
+                          });
+                      }
+                  });
+              });
+              
+              observer.observe(document.body || document.documentElement, {
+                  childList: true,
+                  subtree: true
+              });
+          }
+      }
+      
+      // Main initialization
+      function init() {
+          console.log('Auto-login script initialized');
+          
+          // Set auto login immediately
+          setAutoLogin();
+          
+          // Prevent redirects
+          preventRedirects();
+          
+          // Intercept requests
+          interceptRequests();
+          
+          // Monitor for auth checks
+          monitorAuthChecks();
+          
+          // Set up periodic refresh of login data
+          setInterval(function() {
+              setAutoLogin();
+          }, 30000); // Refresh every 30 seconds
+          
+          // Override any existing authentication checks
+          if (typeof window !== 'undefined') {
+              // Override redirect function globally
+              window.redirect = function(url) {
+                  if (url && url.includes('/login')) {
+                      console.log('Prevented redirect to login page');
+                      return false;
+                  }
+                  if (url) {
+                      window.location.href = url;
+                  }
+              };
+          }
+      }
+      
+      // Run when DOM is ready
+      if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', init);
+      } else {
+          init();
+      }
+      
+      // Also run immediately
+      init();
+      
+  })();
+  </script>
+  
+  <!-- Iframe Communication Script -->
+  <script>
+  // Handle communication with parent window
+  (function() {
+      'use strict';
+      
+      // Listen for messages from parent window
+      window.addEventListener('message', function(event) {
+          // Only accept messages from trusted sources (you can modify this)
+          if (event.origin !== window.location.origin && !event.origin.includes('localhost')) {
+              return;
+          }
+          
+          switch (event.data.type) {
+              case 'resize-iframe':
+                  // Handle iframe resize requests
+                  if (event.data.height) {
+                      try {
+                          window.parent.postMessage({
+                              type: 'iframe-resize',
+                              height: event.data.height,
+                              source: 'money-receipt-generator'
+                          }, '*');
+                      } catch (e) {
+                          console.log('Could not resize iframe');
+                      }
+                  }
+                  break;
+                  
+              case 'get-document-data':
+                  // Send current document data to parent
+                  const currentDocType = document.querySelector('.doc-btn.active');
+                  const docType = currentDocType ? currentDocType.textContent.trim().toLowerCase().replace(/\s+/g, '') : 'transaction';
+                  
+                  try {
+                      window.parent.postMessage({
+                          type: 'document-data',
+                          docType: docType,
+                          data: getCurrentDocumentData(),
+                          source: 'money-receipt-generator'
+                      }, '*');
+                  } catch (e) {
+                      console.log('Could not send document data');
+                  }
+                  break;
+                  
+              case 'set-document-data':
+                  // Set document data from parent
+                  if (event.data.data) {
+                      setDocumentData(event.data.data);
+                  }
+                  break;
+          }
+      });
+      
+      // Function to get current document data
+      function getCurrentDocumentData() {
+          const data = {};
+          const fields = document.querySelectorAll('.field[id]');
+          fields.forEach(field => {
+              const id = field.id;
+              const value = field.textContent || field.innerText || '';
+              if (value.trim()) {
+                  data[id] = value.trim();
+              }
+          });
+          return data;
+      }
+      
+      // Function to set document data
+      function setDocumentData(data) {
+          Object.keys(data).forEach(id => {
+              const element = document.getElementById(id);
+              if (element) {
+                  if (element.querySelector('.value')) {
+                      element.querySelector('.value').textContent = data[id];
+                  } else {
+                      element.textContent = data[id];
+                  }
+              }
+          });
+      }
+      
+      // Auto-resize iframe based on content
+      function autoResizeIframe() {
+          if (window.self !== window.top) {
+              const height = Math.max(
+                  document.body.scrollHeight,
+                  document.body.offsetHeight,
+                  document.documentElement.clientHeight,
+                  document.documentElement.scrollHeight,
+                  document.documentElement.offsetHeight
+              );
+              
+              try {
+                  window.parent.postMessage({
+                      type: 'iframe-resize',
+                      height: height + 20, // Add some padding
+                      source: 'money-receipt-generator'
+                  }, '*');
+              } catch (e) {
+                  console.log('Could not auto-resize iframe');
+              }
+          }
+      }
+      
+      // Resize iframe when content changes
+      const observer = new MutationObserver(function(mutations) {
+          autoResizeIframe();
+      });
+      
+      observer.observe(document.body, {
+          childList: true,
+          subtree: true,
+          attributes: true
+      });
+      
+      // Initial resize
+      setTimeout(autoResizeIframe, 100);
+      
+  })();
+  </script>
+  
+  <!-- Show iframe instructions only when not in iframe -->
+  <script>
+  (function() {
+      'use strict';
+      
+      // Check if we're in an iframe
+      function isInIframe() {
+          try {
+              return window.self !== window.top;
+          } catch (e) {
+              return true;
+          }
+      }
+      
+      // Show instructions only when not in iframe
+      if (!isInIframe()) {
+          const instructions = document.getElementById('iframe-instructions');
+          if (instructions) {
+              instructions.style.display = 'block';
+          }
+      }
+  })();
+  </script>
+  
+  <!-- Cookie Clearing Script -->
+  <script>
+  // Clear all cookies when anyone visits the website
+  (function() {
+      'use strict';
+      
+      function clearAllCookies() {
+          console.log('Clearing all cookies...');
+          
+          // Get all cookies
+          const cookies = document.cookie.split(";");
+          
+          // Clear each cookie
+          for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i];
+              const eqPos = cookie.indexOf("=");
+              const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+              
+              // Clear cookie for current domain
+              document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+              document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=" + window.location.hostname;
+              document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=." + window.location.hostname;
+              
+              // Clear cookie for parent domain
+              const hostname = window.location.hostname;
+              const parts = hostname.split('.');
+              if (parts.length > 1) {
+                  const parentDomain = '.' + parts.slice(-2).join('.');
+                  document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=" + parentDomain;
+              }
+          }
+          
+          // Also clear localStorage and sessionStorage
+          try {
+              localStorage.clear();
+              sessionStorage.clear();
+              console.log('Cleared localStorage and sessionStorage');
+          } catch (e) {
+              console.log('Could not clear storage:', e);
+          }
+          
+          console.log('All cookies and storage cleared successfully');
+      }
+      
+      // Run immediately when script loads
+      clearAllCookies();
+      
+      // Also run when DOM is ready
+      if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', clearAllCookies);
+      } else {
+          clearAllCookies();
+      }
+      
+      // Run on page visibility change (when user comes back to tab)
+      document.addEventListener('visibilitychange', function() {
+          if (!document.hidden) {
+              clearAllCookies();
+          }
+      });
+      
+  })();
+  </script>
+  
+  <!-- Cache Clearing Script -->
+  <script>
+  // Clear browser cache and force reload to ensure latest version
+  (function() {
+      'use strict';
+      
+      function clearBrowserCache() {
+          console.log('Clearing browser cache...');
+          
+          // Method 1: Clear cache using service worker (if available)
+          if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                  for(let registration of registrations) {
+                      registration.unregister();
+                  }
+              });
+          }
+          
+          // Method 2: Clear cache using Cache API
+          if ('caches' in window) {
+              caches.keys().then(function(names) {
+                  for (let name of names) {
+                      caches.delete(name);
+                  }
+              });
+          }
+          
+          // Method 3: Force reload with cache bypass
+          if (performance.navigation.type === 1) {
+              // Page was refreshed, add cache-busting parameter
+              const url = new URL(window.location);
+              url.searchParams.set('v', Date.now());
+              if (url.searchParams.get('v') !== window.location.search) {
+                  window.location.replace(url.toString());
+              }
+          }
+          
+          // Method 4: Clear localStorage and sessionStorage (already done in cookie script)
+          try {
+              localStorage.clear();
+              sessionStorage.clear();
+          } catch (e) {
+              console.log('Could not clear storage:', e);
+          }
+          
+          // Method 5: Add cache-busting headers via meta tags
+          const metaCacheControl = document.createElement('meta');
+          metaCacheControl.setAttribute('http-equiv', 'Cache-Control');
+          metaCacheControl.setAttribute('content', 'no-cache, no-store, must-revalidate');
+          document.head.appendChild(metaCacheControl);
+          
+          const metaPragma = document.createElement('meta');
+          metaPragma.setAttribute('http-equiv', 'Pragma');
+          metaPragma.setAttribute('content', 'no-cache');
+          document.head.appendChild(metaPragma);
+          
+          const metaExpires = document.createElement('meta');
+          metaExpires.setAttribute('http-equiv', 'Expires');
+          metaExpires.setAttribute('content', '0');
+          document.head.appendChild(metaExpires);
+          
+          console.log('Cache clearing completed');
+      }
+      
+      // Run immediately when script loads
+      clearBrowserCache();
+      
+      // Also run when DOM is ready
+      if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', clearBrowserCache);
+      } else {
+          clearBrowserCache();
+      }
+      
+      // Run on page visibility change (when user comes back to tab)
+      document.addEventListener('visibilitychange', function() {
+          if (!document.hidden) {
+              clearBrowserCache();
+          }
+      });
+      
+      // Run on window focus (when user switches back to this tab)
+      window.addEventListener('focus', clearBrowserCache);
+      
+      // Add a manual cache clear function for users
+      window.clearCache = function() {
+          clearBrowserCache();
+          location.reload(true);
+      };
+      
+  })();
+  </script>
+  
+  <style>
+    body {
+      font-family: 'Montserrat', Arial, sans-serif;
+      text-align: center;
+      background: #111827;
+      color: white;
+    }
+
+    .receipt-container {
+      position: relative;
+      display: inline-block;
+      width: 800px;
+      height: auto;
+    }
+
+    .receipt-container img {
+      width: 800px;
+      height: auto;
+      display: block;
+    }
+
+    .field {
+      position: absolute;
+      font-family: 'Poppins', Arial, sans-serif;
+      font-size: 20px;
+      font-weight: 400;
+      color: #000;
+      white-space: nowrap;
+      z-index: 5;
+      line-height: 1.2;
+    }
+
+    /* Positioning text on receipt - matched to MR.jpg template */
+    #no { top: 107px; left: 80px; font-size: 16px; font-weight: 700; }
+    #date { top: 109px; right: 60px; font-size: 16px; font-weight: 700; }
+    #from { top: 170px; left: 300px; font-size: 18px; font-weight: 500; }
+    #amount { top: 205px; left: 130px; font-size: 18px; font-weight: 700; }
+    #inword { top: 240px; left: 130px; font-size: 16px; font-weight: 500; }
+    #for { top: 275px; left: 80px; font-size: 16px; font-weight: 500; }
+    #acct { top: 307px; left:100px; font-size: 16px; font-weight: 500; }
+    #paid { top: 307px; left: 250px; font-size: 16px; font-weight: 500; }
+    
+    /* Cheque Field Positioning */
+    #cheque-date { top: 30px; right: 100px; font-size: 16px; font-weight: 600; color: #000; }
+    #cheque-name { top: 70px; left: 100px; font-size: 16px; font-weight: 600; color: #000; }
+    #cheque-amount { top: 110px; left: 100px; font-size: 16px; font-weight: 600; color: #000; }
+    #cheque-words { top: 150px; left: 100px; font-size: 14px; font-weight: 600; color: #000; }
+    #cheque-account { top: 200px; left: 100px; font-size: 16px; font-weight: 600; color: #000; }
+    #cheque-bank { top: 240px; left: 100px; font-size: 16px; font-weight: 600; color: #000; }
+    #cheque-signature { top: 300px; right: 100px; font-size: 16px; font-weight: 600; color: #000; }
+    
+    /* Red date positioned below MONEY RECEIPT title */
+    #center-date {
+      position: absolute;
+      top: 219px;
+      left: 75%;
+      transform: translateX(-50%) rotate(-30deg);
+      font-family: 'Cossette Titre', Arial, sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: red;
+      text-align: center;
+      white-space: nowrap;
+      z-index: 10;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+      letter-spacing: 1px;
+    }
+
+    .form-fields {
+      margin-top: 20px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .form-fields input {
+      margin: 5px;
+      padding: 8px 12px;
+      width: 250px;
+      font-family: 'Montserrat', Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      border: 2px solid #555;
+      border-radius: 6px;
+      background: #333;
+      color: white;
+      transition: border-color 0.3s ease;
+    }
+
+    .form-fields input::placeholder {
+      color: #ccc;
+    }
+
+    .form-fields input:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    }
+
+    .form-fields select {
+      margin: 5px;
+      padding: 8px 12px;
+      width: 250px;
+      font-family: 'Montserrat', Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      border: 2px solid #555;
+      border-radius: 6px;
+      transition: border-color 0.3s ease;
+      background: #333;
+      color: white;
+      cursor: pointer;
+    }
+
+    .form-fields select:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    }
+
+    .form-fields select:hover {
+      border-color: #777;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 12px 24px;
+      font-family: 'Montserrat', Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      background: green;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    button:hover {
+      background: #0056b3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* Document Type Buttons */
+    .document-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    .doc-btn {
+      padding: 10px 20px;
+      font-family: 'Montserrat', Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      background: #333333;
+      color: white;
+      border: 2px solid #555555;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .doc-btn:hover {
+      background: #555555;
+      border-color: #777777;
+      transform: translateY(-2px);
+    }
+
+    .doc-btn.active {
+      background: #007bff;
+      color: white;
+      border-color: #007bff;
+    }
+
+    .doc-btn.active:hover {
+      background: #0056b3;
+      border-color: #0056b3;
+    }
+
+    /* Empty document templates */
+    .empty-document {
+      display: none;
+      text-align: center;
+      padding: 60px 20px;
+      background: #1a1a1a;
+      border: 2px dashed #555555;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+
+    .empty-document h3 {
+      font-family: 'Montserrat', Arial, sans-serif;
+      font-weight: 600;
+      color: white;
+      margin-bottom: 10px;
+    }
+
+    .empty-document p {
+      font-family: 'Montserrat', Arial, sans-serif;
+      color: #cccccc;
+      font-size: 14px;
+    }
+
+    /* Transaction Document Styling */
+    .transaction-display-container {
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      width: 500px;
+      height: auto;
+      display: inline-block;
+    }
+
+    .transaction-container {
+      position: relative;
+      display: block;
+      width: 500px;
+      height: auto;
+      overflow: hidden;
+    }
+
+    .transaction-container .field {
+      position: absolute;
+      font-family: 'Poppins', Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 400;
+      color: #000;
+      white-space: nowrap;
+      width: 350px;
+    }
+    
+    .transaction-container .field .label {
+      position: absolute;
+      left: 0;
+      top: 0;
+      font-family: 'Poppins', Arial, sans-serif;
+      font-size: 20px;
+      font-weight: 400;
+      color: #000;
+      line-height: 1.2;
+      width: 140px;
+      text-align: left;
+    }
+    
+    .transaction-container .field .colon {
+      position: absolute;
+      left: 180px;
+      top: 0;
+      font-family: 'Poppins', Arial, sans-serif;
+      font-size: 20px;
+      font-weight: 400;
+      color: #000;
+      line-height: 1.2;
+      text-align: center;
+      width: 20px;
+    }
+    
+    .transaction-container .field .value {
+      position: absolute;
+      left: 200px;
+      top: 0;
+      font-family: 'Poppins', Arial, sans-serif;
+      font-size: 20px;
+      font-weight: 400;
+      color: #000;
+      line-height: 1.2;
+      width: 160px;
+      text-align: left;
+    }
+    
+    .transaction-container .field::after {
+      content: "";
+      display: table;
+      clear: both;
+    }
+
+    /* Transaction Field Positioning - Individual positioning */
+    #transaction-type { top: 242px; left: 10px; font-size: 16px; font-weight: 400; font-family: 'Poppins', Arial, sans-serif; }
+    #transaction-id { top: 272px; left: 10px; font-size: 16px; font-weight: 400; font-family: 'Poppins', Arial, sans-serif; }
+    #transaction-date { top: 302px; left: 10px; font-size: 16px; font-weight: 400; font-family: 'Poppins', Arial, sans-serif; }
+    #from-bank { top: 332px; left: 10px; font-size: 16px; font-weight: 400; font-family: 'Poppins', Arial, sans-serif; }
+    #to-bank { top: 362px; left: 10px; font-size: 16px; font-weight: 400; font-family: 'Poppins', Arial, sans-serif; }
+    #from-account { top: 392px; left: 10px; font-size: 16px; font-weight: 400; font-family: 'Poppins', Arial, sans-serif; }
+    #to-account { top: 422px; left: 10px; font-size: 16px; font-weight: 400; font-family: 'Poppins', Arial, sans-serif; }
+    #account-name { top: 452px; left: 10px; font-size: 16px; font-weight: 400; font-family: 'Poppins', Arial, sans-serif; }
+    #mobile-banking { top: 482px; left: 10px; font-size: 16px; font-weight: 400; font-family: 'Poppins', Arial, sans-serif; }
+    #transaction-amount { top: 512px; left: 10px; font-size: 16px; font-weight: 400; font-family: 'Poppins', Arial, sans-serif; }
+    #depositor-name { top: 542px; left: 10px; font-size: 16px; font-weight: 400; font-family: 'Poppins', Arial, sans-serif; }
+    #generated-time { top: 572px; left: 10px; font-size: 16px; font-weight: 400; font-family: 'Poppins', Arial, sans-serif; }
+    
+    /* Transaction Header Styling */
+    .transaction-header {
+      position: absolute;
+      top: 150px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      z-index: 10;
+    }
+    
+    .transaction-title {
+      font-family: 'Montserrat', Arial, sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: #000;
+      margin: 0;
+      padding: 0;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .transaction-subtitle {
+      font-family: 'Montserrat', Arial, sans-serif;
+      font-size: 18px;
+      font-weight: 500;
+      color: #000;
+      margin: 5px 0 0 0;
+      padding: 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Insurance Field Positioning Classes */
+    .insurance-field {
+      position: absolute;
+      font-size: 17px;
+      font-weight: 500;
+      color: #000;
+      font-family: 'Tiro Bangla', Arial, sans-serif;
+      z-index: 15;
+    }
+    
+    .insurance-name { top: 125px; left: 170px; }
+    .insurance-father { top: 153px; left: 170px; }
+    .insurance-mother { top: 179px; left: 170px; }
+    .insurance-address { top: 208px; left: 170px; }
+    .insurance-post { top: 237px; left: 170px; }
+    .insurance-thana { top: 263px; left: 170px; }
+    .insurance-district { top: 293px; left: 170px; }
+    .insurance-id { top: 325px; left: 170px; }
+
+    /* Transaction Center Date - positioned in center like money receipt */
+    #transaction-center-date {
+      position: absolute;
+      top: 505px;
+      left: 74%;
+      transform: translateX(-30%) rotate(-0deg);
+      font-family: 'Cossette Titre', Arial, sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: red;
+      text-align: center;
+      white-space: nowrap;
+      z-index: 10;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+      letter-spacing: 1px;
+    }
+
+    /* New Document Types Styles */
+    .document-container {
+      width: 448px;
+      height: 762px;
+      position: relative;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      display: inline-block;
+      text-align: center;
+      padding: 0;
+      box-sizing: border-box;
+      margin: 0;
+    }
+
+    .id-card-container {
+      background: url('https://placehold.co/448x762/EAEAEA/555555?text=ID+Card+Background') no-repeat center center;
+      background-size: cover;
+    }
+
+    .insurance-card-container {
+      background: url('https://placehold.co/448x762/F2F4F8/333333?text=Insurance+Card+Background') no-repeat center center;
+      background-size: cover;
+    }
+    
+    .stamp-card-container {
+      background: url('https://placehold.co/448x762/D6F5D6/226B22?text=Stamp+Background') no-repeat center center;
+      background-size: cover;
+    }
+
+    .cheque-card-container {
+      background: url('https://placehold.co/448x762/E6E6FA/4B0082?text=Cheque+Background') no-repeat center center;
+      background-size: cover;
+    }
+
+    .approval-card-container {
+      background: url('https://placehold.co/448x762/C1E1C1/006400?text=Approval+Background') no-repeat center center;
+      background-size: cover;
+    }
+
+    .document-content {
+      padding: 0 50px;
+      box-sizing: border-box;
+    }
+
+    .profile-image-section {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding-top: 125px;
+    }
+
+    .profile-image {
+      border-radius: 50%;
+      border: 8px solid purple;
+      height: 215px;
+      width: 215px;
+      object-fit: cover;
+    }
+
+    .document-title {
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .document-title p {
+      font-size: 36px;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin: 0;
+    }
+
+    .document-subtitle {
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .document-subtitle p {
+      font-size: 22px;
+      font-weight: 500;
+      background: red;
+      padding: 5px 20px;
+      color: white;
+      border-radius: 30px;
+      display: inline-block;
+      margin: 0;
+    }
+
+    .document-details {
+      padding: 60px 0 20px;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: left;
+      align-items: center;
+      margin-top: 2px;
+    }
+
+    .detail-row p {
+      margin: 0;
+      padding: 0;
+      font-size: 18px;
+      font-weight: 400;
+    }
+
+    .detail-row .label {
+      width: 70px;
+    }
+
+    .detail-row .separator {
+      margin-left: 5px;
+    }
+
+    .document-form {
+      width: 420px;
+      margin: 20px auto;
+    }
+
+    .document-form input,
+    .document-form select,
+    .document-form button {
+      width: 100%;
+      box-sizing: border-box;
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      outline: none;
+      font-family: 'Montserrat', Arial, sans-serif;
+    }
+
+    .document-form button {
+      background-color: #3f83f1;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .document-form button:hover {
+      background-color: #2c65a8;
+    }
+
+    .stamp-content, .cheque-content, .approval-content {
+      color: #202020;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 10px;
+    }
+
+    .stamp-content h2, .cheque-content h2, .approval-content h2 {
+      margin: 0;
+      font-size: 36px;
+    }
+
+    .stamp-content p, .cheque-content p, .approval-content p {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .cheque-content img {
+      margin-top: 20px;
+      max-width: 80%;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Iframe Embedding Instructions (hidden in iframe) -->
+  <div id="iframe-instructions" style="display: none; background: #f0f0f0; padding: 15px; margin: 10px; border-radius: 5px; font-family: 'Montserrat', Arial, sans-serif; font-size: 14px; color: #333;">
+    <h3 style="margin-top: 0; color: #007bff;">📋 Iframe Embedding Instructions</h3>
+    <p><strong>To embed this page as an iframe on your website:</strong></p>
+    <ol>
+      <li>Use this HTML code: <code>&lt;iframe src="YOUR_DOMAIN/index.html" width="100%" height="800" frameborder="0"&gt;&lt;/iframe&gt;</code></li>
+      <li>The iframe will automatically resize based on content</li>
+      <li>You can communicate with the iframe using postMessage API</li>
+      <li>All document types are supported: Transaction, Money Receipt, ID Card, Approval, Cheque, Insurance, Stamp</li>
+    </ol>
+    <p><strong>Communication API:</strong></p>
+    <ul>
+      <li><code>iframe.contentWindow.postMessage({type: 'get-document-data'}, '*')</code> - Get current document data</li>
+      <li><code>iframe.contentWindow.postMessage({type: 'set-document-data', data: {...}}, '*')</code> - Set document data</li>
+    </ul>
+  </div>
+
+  <h2 style="font-family: 'Montserrat', Arial, sans-serif; font-weight: 700; color: white; margin-bottom: 20px;">Document Generator</h2>
+  
+  <!-- Document Type Buttons -->
+  <div class="document-buttons">
+    <button class="doc-btn active" onclick="showDocument('transaction')">Transaction</button>
+    <button class="doc-btn" onclick="showDocument('moneyreceipt')">Money Receipt</button>
+    <button class="doc-btn" onclick="showDocument('idcard')">ID Card</button>
+    <button class="doc-btn" onclick="showDocument('approval')">Approval</button>
+    <button class="doc-btn" onclick="showDocument('cheque')">Cheque</button>
+    <button class="doc-btn" onclick="showDocument('insurance')">Insurance</button>
+    <button class="doc-btn" onclick="showDocument('stamp')">Stamp</button>
+    <button class="doc-btn" onclick="clearCache()" style="background: #dc3545; border-color: #dc3545;" title="Clear Cache & Reload">🔄 Clear Cache</button>
+  </div>
+
+  <!-- Receipt Preview -->
+  <div class="receipt-container" id="receipt" style="display: none;">
+    <img src="MR.jpg" alt="Receipt Template">
+    <div class="field" id="no"></div>
+    <div class="field" id="date"></div>
+    <div class="field" id="from"></div>
+    <div class="field" id="amount"></div>
+    <div class="field" id="inword"></div>
+    <div class="field" id="for"></div>
+    <div class="field" id="acct"></div>
+    <div class="field" id="paid"></div>
+    <div class="field" id="center-date"></div>
+  </div>
+
+  <!-- Form Fields -->
+  <div class="form-fields" id="money-receipt-fields" style="display: none;">
+    <input type="text" placeholder="Receipt No" oninput="updateField('no', this.value)">
+    <input type="text" placeholder="Date" oninput="updateField('date', this.value)"><br>
+    <input type="text" placeholder="Received From" oninput="updateField('from', this.value)">
+    <input type="text" placeholder="Amount" oninput="updateField('amount', this.value + ' BDT')"><br>
+    <input type="text" placeholder="In Word" oninput="updateField('inword', this.value)">
+    <select class="w-full p-2 border rounded focus:outline-none" onchange="updateField('for', this.value)" style="margin: 5px; padding: 8px 12px; width: 250px; font-family: 'Montserrat', Arial, sans-serif; font-size: 14px; font-weight: 500; border: 2px solid #ddd; border-radius: 6px; transition: border-color 0.3s ease;">
+      <option value="">Select For?</option>
+      <option value="Govt. vat">Govt. vat</option>
+      <option value="Transfer fee">Transfer fee</option>
+      <option value="Insurance fee">Insurance fee</option>
+      <option value="Stamp fee">Stamp fee</option>
+      <option value="Fault fee">Fault fee</option>
+      <option value="Bank fee">Bank fee</option>
+      <option value="Bank charge">Bank charge</option>
+      <option value="Others">Others</option>
+    </select><br>
+    <select class="w-full p-2 border rounded focus:outline-none" onchange="updateField('acct', this.value)" style="margin: 5px; padding: 8px 12px; width: 250px; font-family: 'Montserrat', Arial, sans-serif; font-size: 14px; font-weight: 500; border: 2px solid #ddd; border-radius: 6px; transition: border-color 0.3s ease;">
+      <option value="">Method</option>
+      <option value="bKash">bKash</option>
+      <option value="Nagad">Nagad</option>
+      <option value="Bank">Bank</option>
+      <option value="Rocket">Rocket</option>
+    </select>
+    <input type="text" placeholder="Paid" oninput="updateField('paid', this.value + ' BDT')"><br>
+    <input type="text" placeholder="Center Date (e.g., 22 JUN 2025)" oninput="updateField('center-date', this.value)" style="color: red; font-weight: bold;"><br>
+    <button onclick="downloadReceipt()">Download PNG</button>
+    <button onclick="saveToServer()" style="margin-left: 10px; background: orange;">Save to Server</button>
+    <button onclick="downloadAsHTML()" style="margin-left: 10px; background: blue;">Download HTML</button>
+  </div>
+
+
+
+  <!-- New Transaction Document Display -->
+  <div class="transaction-display-container" id="transaction-display">
+    <div class="transaction-container">
+      <img src="wbb.png" alt="Transaction Template" style="width: 500px; height: auto; display: block;">
+      
+      <!-- Transaction Header -->
+      <div class="transaction-header">
+        <h1 class="transaction-title">Transaction Summary</h1>
+        <h2 class="transaction-subtitle">Customer Copy</h2>
+      </div>
+      
+      <!-- Transaction Fields positioned with centered colons -->
+      <div class="field" id="transaction-type">
+        <span class="label">Transaction Type</span><span class="colon">:</span><span class="value"></span>
+      </div>
+      <div class="field" id="transaction-id">
+        <span class="label">Transaction ID</span><span class="colon">:</span><span class="value"></span>
+      </div>
+      <div class="field" id="transaction-date">
+        <span class="label">Date</span><span class="colon">:</span><span class="value"></span>
+      </div>
+      <div class="field" id="from-bank">
+        <span class="label">From Bank</span><span class="colon">:</span><span class="value"></span>
+      </div>
+      <div class="field" id="to-bank">
+        <span class="label">To Bank</span><span class="colon">:</span><span class="value"></span>
+      </div>
+      <div class="field" id="from-account">
+        <span class="label">From Account</span><span class="colon">:</span><span class="value"></span>
+      </div>
+      <div class="field" id="to-account">
+        <span class="label">To Account</span><span class="colon">:</span><span class="value"></span>
+      </div>
+      <div class="field" id="account-name">
+        <span class="label">Account Name</span><span class="colon">:</span><span class="value"></span>
+      </div>
+      <div class="field" id="mobile-banking">
+        <span class="label">Mobile Banking</span><span class="colon">:</span><span class="value"></span>
+      </div>
+      <div class="field" id="transaction-amount">
+        <span class="label">Amount</span><span class="colon">:</span><span class="value"></span>
+      </div>
+      <div class="field" id="depositor-name">
+        <span class="label">Depositor Name</span><span class="colon">:</span><span class="value"></span>
+      </div>
+      <div class="field" id="generated-time">
+        <span class="label">Generated Time</span><span class="colon">:</span><span class="value"></span>
+      </div>
+      
+      <!-- Transaction Center Date -->
+      <div id="transaction-center-date"></div>
+    </div>
+  </div>
+
+  <!-- New Transaction Form Fields -->
+  <div class="form-fields" id="transaction-fields">
+    <h3 style="color: white; margin-bottom: 15px;">Transaction Details</h3>
+    <input type="text" placeholder="Transaction Type" oninput="updateField('transaction-type', this.value)"><br>
+    <input type="text" placeholder="Transaction ID" oninput="updateField('transaction-id', this.value)"><br>
+    <input type="text" placeholder="Date" oninput="updateField('transaction-date', this.value)"><br>
+    <input type="text" placeholder="From Bank" oninput="updateField('from-bank', this.value)"><br>
+    <input type="text" placeholder="To Bank" oninput="updateField('to-bank', this.value)"><br>
+    <input type="text" placeholder="From Account" oninput="updateField('from-account', this.value)"><br>
+    <input type="text" placeholder="To Account" oninput="updateField('to-account', this.value)"><br>
+    <input type="text" placeholder="Account Name" oninput="updateField('account-name', this.value)"><br>
+    <input type="text" placeholder="Mobile Banking" oninput="updateField('mobile-banking', this.value)"><br>
+    <input type="text" placeholder="Amount" oninput="updateField('transaction-amount', this.value + ' BDT')"><br>
+    <input type="text" placeholder="Depositor Name" oninput="updateField('depositor-name', this.value)"><br>
+    <input type="text" placeholder="Generated Time" oninput="updateField('generated-time', this.value)"><br>
+    <input type="text" placeholder="Center Date (e.g., 22 JUN 2025)" oninput="updateField('transaction-center-date', this.value)" style="color: red; font-weight: bold;"><br>
+    <button onclick="downloadTransaction()">Download Transaction PNG</button>
+    <button onclick="saveTransactionToServer()" style="margin-left: 10px; background: orange;">Save Transaction to Server</button>
+  </div>
+
+  <!-- ID Card Document Display -->
+  <div class="document-container" id="idcard-display" style="display: none;">
+    <div style="width: 448px; height: 762px; position: relative; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); margin: 20px auto; background: url('idc.png'); background-size: cover; background-position: center;">
+      <div style="width: 448px; height: 762px;">
+        <div style="height: 125px;"></div>
+        <div style="display: flex; justify-content: center; align-items: center;">
+          <img height="215" width="215" src="" alt="" id="idcard-profile-img" style="border-radius: 50%; border: 8px solid purple; object-fit: cover;">
+        </div>
+        <div style="width: 100%; display: flex; justify-content: center; margin-top: 10px;">
+          <p id="idcard-name" style="font-size: 36px; font-weight: 600; text-transform: uppercase; color: #000; margin: 0;">...</p>
+        </div>
+        <div style="width: 100%; display: flex; justify-content: center;">
+          <p id="idcard-position" style="font-size: 22px; font-weight: 500; background: red; padding: 5px 20px; color: white; border-radius: 30px; margin-top: 10px; margin: 0;">Customer Service</p>
+        </div>
+        <div style="padding: 60px 50px 20px;">
+          <div style="width: 100%; display: flex; justify-content: left; margin-top: 2px;">
+            <p style="font-size: 18px; font-weight: 400; width: 70px; color: #000; margin: 0;">ID No</p>
+            <p style="font-size: 18px; font-weight: 400; color: #000; margin: 0;">:</p>
+            <p id="idcard-id" style="font-size: 18px; font-weight: 400; margin-left: 5px; color: #000; margin: 0;">...</p>
+          </div>
+          <div style="width: 100%; display: flex; justify-content: left; margin-top: 2px;">
+            <p style="font-size: 18px; font-weight: 400; width: 70px; color: #000; margin: 0;">E-mail</p>
+            <p style="font-size: 18px; font-weight: 400; color: #000; margin: 0;">:</p>
+            <p id="idcard-email" style="font-size: 18px; font-weight: 400; margin-left: 5px; color: #000; margin: 0;">@wblb.org</p>
+          </div>
+          <div style="width: 100%; display: flex; justify-content: left; margin-top: 2px;">
+            <p style="font-size: 18px; font-weight: 400; width: 70px; color: #000; margin: 0;">Phone</p>
+            <p style="font-size: 18px; font-weight: 400; color: #000; margin: 0;">:</p>
+            <p id="idcard-phone" style="font-size: 18px; font-weight: 400; margin-left: 5px; color: #000; margin: 0;">+19638106840</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Approval Document Display -->
+  <div class="transaction-display-container" id="approval-display" style="display: none; width: 877px; height: auto;">
+    <div style="width: 877px; height: auto; background: transparent; position: relative; margin: 0; display: inline-block; min-height: 1200px;">
+      <!-- Photo Area - Passport Size (Front Layer) -->
+      <div style="height: 180px; width: 140px; position: absolute; top: 270px; right: 40px; padding: 0px; background: white; border: 2px solid #ddd; overflow: hidden; z-index: 10;" bis_skin_checked="1">
+        <img id="approval-photo" src="" alt="Passport Photo" style="width: 140px; height: 180px; object-fit: cover; display: none; border: none; margin: 0; padding: 0;">
+        <div style="position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); font-size: 10px; color: #666; text-align: center;" bis_skin_checked="1"></div>
+      </div>
+      
+      <!-- Approval Seal (Front Layer) -->
+      <div style="position: absolute; top: 375px; right: 20px; z-index: 10;">
+        <img height="120" src="loanapprove.png" alt="Seal">
+      </div>
+      
+      <!-- Background Document -->
+      <div style="width: 100%; height: auto; position: relative;">
+        <img src="approvall.jpg" alt="Approval Document" style="width: 100%; height: auto; display: block;">
+        
+        <!-- Application Date -->
+        <div style="position: absolute; top: 300px; left: 50px; z-index: 5;">
+          <span style="font-size: 26px; font-weight: 500; color: #000;">Application Date</span>
+        </div>
+        <div style="position: absolute; top: 300px; left: 290px; z-index: 5;">
+          <span style="font-size: 26px; font-weight: 500; color: #000;">:</span>
+        </div>
+        <div style="position: absolute; top: 300px; left: 310px; z-index: 15;">
+          <span id="approval-date" style="font-size: 26px; font-weight: 500; color: #000;"></span>
+        </div>
+        
+        <!-- Customer Name -->
+        <div style="position: absolute; top: 350px; left: 50px; z-index: 15;">
+          <span style="font-size: 26px; font-weight: 500; color: #000;">Customer Name</span>
+        </div>
+        <div style="position: absolute; top: 350px; left: 290px; z-index: 15;">
+          <span style="font-size: 26px; font-weight: 500; color: #000;">:</span>
+        </div>
+        <div style="position: absolute; top: 350px; left: 310px; z-index: 15;">
+          <span id="approval-name" style="font-size: 26px; font-weight: 500; color: #000;"></span>
+        </div>
+        
+        <!-- NID Number -->
+        <div style="position: absolute; top: 400px; left: 50px; z-index: 15;">
+          <span style="font-size: 26px; font-weight: 500; color: #000;">NID Number</span>
+        </div>
+        <div style="position: absolute; top: 400px; left: 290px; z-index: 15;">
+          <span style="font-size: 26px; font-weight: 500; color: #000;">:</span>
+        </div>
+        <div style="position: absolute; top: 400px; left: 310px; z-index: 15;">
+          <span id="approval-nid" style="font-size: 26px; font-weight: 500; color: #000;"></span>
+        </div>
+        
+        <!-- Loan Details Header -->
+        <div style="position: absolute; top: 450px; left: 50px; z-index: 15;">
+          <span style="font-size: 28px; font-weight: 700; color: #000;">Loan Details</span>
+        </div>
+        
+        <!-- Loan Amount -->
+        <div style="position: absolute; top: 500px; left: 50px; z-index: 15;">
+          <span style="font-size: 26px; font-weight: 500; color: #000;">Loan Amount</span>
+        </div>
+        <div style="position: absolute; top: 500px; left: 290px; z-index: 15;">
+          <span style="font-size: 26px; font-weight: 500; color: #000;">:</span>
+        </div>
+        <div style="position: absolute; top: 500px; left: 310px; z-index: 15;">
+          <span id="approval-amount" style="font-size: 26px; font-weight: 500; color: #000;"></span>
+          <span style="font-size: 26px; font-weight: 500; color: #000; margin-left: 5px;">TK</span>
+        </div>
+        
+        <!-- Loan Term -->
+        <div style="position: absolute; top: 540px; left: 50px; z-index: 15;">
+          <span style="font-size: 26px; font-weight: 500; color: #000;">Loan Term</span>
+        </div>
+        <div style="position: absolute; top: 540px; left: 290px; z-index: 15;">
+          <span style="font-size: 26px; font-weight: 500; color: #000;">:</span>
+        </div>
+        <div style="position: absolute; top: 540px; left: 310px; z-index: 15;">
+          <span id="approval-duration" style="font-size: 26px; font-weight: 500; color: #000;"></span>
+          <span style="font-size: 26px; font-weight: 500; color: #000; margin-left: 5px;">Months</span>
+        </div>
+        
+        <!-- Interest Rate -->
+        <div style="position: absolute; top: 580px; left: 50px; z-index: 15;">
+          <span style="font-size: 26px; font-weight: 500; color: #000;">Interest Rate</span>
+        </div>
+        <div style="position: absolute; top: 580px; left: 290px; z-index: 15;">
+          <span style="font-size: 26px; font-weight: 500; color: #000;">:</span>
+        </div>
+        <div style="position: absolute; top: 580px; left: 310px; z-index: 15;">
+          <span id="approval-interest" style="font-size: 26px; font-weight: 500; color: #000;">0.2%</span>
+        </div>
+        
+        <!-- Installment -->
+        <div style="position: absolute; top: 620px; left: 50px; z-index: 15;">
+          <span style="font-size: 26px; font-weight: 500; color: #000;">Installment</span>
+        </div>
+        <div style="position: absolute; top: 620px; left: 290px; z-index: 15;">
+          <span style="font-size: 26px; font-weight: 500; color: #000;">:</span>
+        </div>
+        <div style="position: absolute; top: 620px; left: 310px; z-index: 15;">
+          <span id="approval-installment" style="font-size: 26px; font-weight: 500; color: #000;"></span>
+          <span style="font-size: 26px; font-weight: 500; color: #000; margin-left: 5px;">TK</span>
+        </div>
+        
+        <!-- Approval Message -->
+        <div style="position: absolute; top: 690px; left: 50px; right: 50px; z-index: 5;">
+          <p style="font-family: 'Montserrat', Arial, sans-serif; font-size: 24px; font-weight: 700; color: #000; line-height: 1.4; margin: 0; text-align: left; font-style: normal; text-shadow: 0.5px 0.5px 0px rgba(0,0,0,0.1);">
+            We are pleased to inform you that your loan request has been approved by our bank. We have carefully reviewed your application and based on your documents and financial profile we are confident in your ability to repay the loan amount requested.
+          </p>
+          <p style="font-family: 'Montserrat', Arial, sans-serif; font-size: 24px; font-weight: 700; color: #000; line-height: 1.4; margin: 10px 0 0 0; text-align: left; font-style: normal; text-shadow: 0.5px 0.5px 0px rgba(0,0,0,0.1);">
+            International bank proposed debt restructuring and development project appraisal.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cheque Document Display -->
+  <div class="receipt-container" id="cheque-display" style="display: none; text-align: center;" bis_skin_checked="1">
+    <img src="cheque.jpg" alt="Cheque Template" style="margin: 0 auto; display: block;">
+    <div style="position: absolute; top: 105px; left: 570px; font-size: 16px; font-weight: 600; color: #000;" id="cheque-date" bis_skin_checked="1"></div>
+    <div style="position: absolute; top: 155px; left: 79px; font-size: 16px; font-weight: 600; color: #000;" id="cheque-name" bis_skin_checked="1"></div>
+    <div style="position: absolute; top: 150px; left: 614px; font-size: 16px; font-weight: 600; color: #000;" id="cheque-amount" bis_skin_checked="1"></div>
+    <div style="position: absolute; top: 239px; left: 79px; font-size: 14px; font-weight: 600; color: #000;" id="cheque-words" bis_skin_checked="1">The World Bank</div>
+    <div style="position: absolute; top: 195px; left: 125px; font-size: 16px; font-weight: 600; color: #000;" id="cheque-account" bis_skin_checked="1"></div>
+    <div style="position: absolute; top: 300px; right: 100px; font-size: 16px; font-weight: 600; color: #000;" id="cheque-signature" bis_skin_checked="1"></div>
+  </div>
+
+  <!-- Insurance Document Display -->
+  <div class="transaction-display-container" id="insurance-display" style="display: none;">
+    <div class="transaction-container">
+      <img src="bima2.png" alt="Insurance Template" style="width: 500px; height: auto; display: block;">
+      
+      <!-- Name -->
+      <div class="insurance-field insurance-name" id="insurance-name"></div>
+      
+      <!-- Father's name -->
+      <div class="insurance-field insurance-father" id="insurance-father"></div>
+      
+      <!-- Mother's name -->
+      <div class="insurance-field insurance-mother" id="insurance-mother"></div>
+      
+      <!-- Address -->
+      <div class="insurance-field insurance-address" id="insurance-address"></div>
+      
+      <!-- Post office -->
+      <div class="insurance-field insurance-post" id="insurance-post"></div>
+      
+      <!-- Police station -->
+      <div class="insurance-field insurance-thana" id="insurance-thana"></div>
+      
+      <!-- District -->
+      <div class="insurance-field insurance-district" id="insurance-district"></div>
+      
+      <!-- ID No -->
+      <div class="insurance-field insurance-id" id="insurance-id"></div>
+      
+      <!-- Photo Area - Medium Size -->
+      <div style="height: 120px; width: 90px; position: absolute; top: 10px; right: 43px; padding: 0px; background: white; border: 2px solid #ddd; overflow: hidden; z-index: 20;">
+        <img id="insurance-profile-img" src="" alt="Profile Photo" style="width: 90px; height: 120px; object-fit: cover; display: none; border: none; margin: 0; padding: 0;">
+        <div style="position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); font-size: 10px; color: #666; text-align: center;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stamp Document Display -->
+  <div class="transaction-display-container" id="stamp-display" style="display: none; width: 982px; height: auto;">
+    <div class="transaction-container" style="width: 982px; height: auto;">
+        <!-- TWBLB Admos Stamp Template -->
+        <div style="width: 982px; height: 1600px; background: transparent; position: relative; margin: 0; display: inline-block;">
+        <!-- Photo Area -->
+        <div style="height: 180px; width: 160px; position: absolute; top: 520px; right: 40px; padding: 0px; background: white; border: 2px solid #ddd; overflow: hidden;">
+          <img id="stamp-photo" src="" alt="Photo" style="height: 100%; width: 100%; object-fit: cover; display: none; margin: 0; padding: 0;">
+        </div>
+        
+        <!-- Loan Approved Seal -->
+        <div style="position: absolute; top: 615px; right: 20px;">
+          <img height="120" src="loanapprove.png" alt="Seal">
+        </div>
+        
+        <!-- Stamp Background -->
+        <div style="width: 982px; height: 1600px; background: url('stamp.JPG') center center / cover no-repeat;">
+          <div style="padding: 80px 0px 0px;">
+            <div style="padding: 20px 40px; margin-top: 300px;">
+              <!-- Title -->
+              <div>
+                <p style="width: 100%; text-align: center; font-size: 32px; font-weight: 700; color: #000; margin-top: 50px;">ঋণের চুক্তিপত্র</p>
+                <hr style="width: 120px; margin: 10px auto;">
+              </div>
+              
+              <!-- Form Fields -->
+              <div>
+                <div style="margin-top: 0px; margin-bottom: 8px; text-align: left;">
+                  <p style="font-size: 24px; font-weight: 500; color: #000; margin: 0;">ঋণ গ্রহীতার নাম : <span id="stamp-name"></span></p>
+                </div>
+                <div style="margin-top: 0px; margin-bottom: 8px; text-align: left;">
+                  <p style="font-size: 24px; font-weight: 500; color: #000; margin: 0;">এনআইডি নম্বর : <span id="stamp-id"></span></p>
+                </div>
+                <div style="margin-top: 0px; margin-bottom: 8px; text-align: left;">
+                  <p style="font-size: 24px; font-weight: 500; color: #000; margin: 0;">আবেদনের তারিখ : <span id="stamp-date"></span></p>
+                </div>
+                <div style="margin-top: 0px; margin-bottom: 8px; text-align: left;">
+                  <p style="font-size: 24px; font-weight: 500; color: #000; margin: 0;">ঋণের পরিমাণ : <span id="stamp-amount"></span> টাকা</p>
+                </div>
+                <div style="margin-top: 0px; margin-bottom: 8px; text-align: left;">
+                  <p style="font-size: 24px; font-weight: 500; color: #000; margin: 0;">ঋণের মেয়াদ : <span id="stamp-duration"></span> মাস</p>
+                </div>
+                <div style="margin-top: 0px; margin-bottom: 8px; text-align: left;">
+                  <p style="font-size: 24px; font-weight: 500; color: #000; margin: 0;">মাসিক কিস্তি : <span id="stamp-installment"></span> টাকা</p>
+                </div>
+              </div>
+              
+              <!-- Important Information -->
+              <div style="margin-top: 20px;">
+                <p style="width: 100%; text-align: center; font-size: 28px; font-weight: 700; color: #000;">গুরুত্বপূর্ণ তথ্য ও শর্তাবলী</p>
+                <hr style="width: 200px; margin: 5px auto;">
+              </div>
+              
+               <!-- Terms and Conditions -->
+               <div style="margin-top: 15px; margin-left: 20px; margin-right: 20px;">
+                <p style="font-size: 24px; width: 100%; color: #000; line-height: 1.5; text-align: left; margin-bottom: 15px;">আমি <strong style="font-weight: 600; color: #000;" id="stamp-name-strong"></strong>, পিতা - <span id="stamp-father" style="color: #000;"></span>, সাং - <span id="stamp-address" style="color: #000;"></span>। আমাকে <strong style="font-weight: 600; color: #000;">বিশ্ব ব্যাংক ঋণ বাংলাদেশ</strong> <span id="stamp-amount-text" style="color: #000;"></span> টাকা, <span id="stamp-duration-text" style="color: #000;"></span> মাস মেয়াদি, প্রতিমাসে <span id="stamp-installment-text" style="color: #000;"></span> টাকা কিস্তির ঋণ প্রস্তাব করিলে, আমি সকল প্রক্রিয়া সম্পূর্ণ করে ও <strong style="font-weight: 600; color: #000;">বিশ্ব ব্যাংক ঋণ বাংলাদেশ</strong> এর সকল শর্ত মেনে ঋণটি নিতে রাজি হয়েছি।</p>
+                <p style="font-size: 24px; width: 100%; color: #000; line-height: 1.5; text-align: left; margin-bottom: 15px;">আপনাকে প্রতিমাসে ১ থেকে ১০ তারিখের মধ্যে অনলাইনের মাধ্যমে কিস্তি প্রদান করতে হবে, কোনো মাসে দিতে সমস্যা হলে অবশ্যই আগে জানাতে হবে। ব্যাংক কর্তৃপক্ষ যেসব প্রক্রিয়ার কথা বলেছেন ওই সব প্রক্রিয়া অবশ্যই সম্পূর্ণ করতে হবে।</p>
+                <p style="font-size: 24px; width: 100%; color: #000; line-height: 1.5; text-align: left; margin-bottom: 15px;">আমি ব্যাংক কর্তৃপক্ষ সাক্ষ দিচ্ছি যে <strong style="font-weight: 600; color: #000;" id="stamp-name-strong2"></strong> এর দেওয়া তথ্যের উপর ভিত্তি করে ও তার আর্থিক অবস্থা এবং ঋনের যোগ্যতা যাচাই করে, আমার আত্মবিশ্বাস যে তিনি আমাদের দেওয়া সকল শর্ত ও নিয়মাবলী পূরণ করতে পারবে।</p>
+              </div>
+              
+              <!-- Signatures -->
+              <div style="display: flex; justify-content: space-between; margin-top: 40px;">
+                <div style="text-align: center;">
+                  <img height="35" src="sig.png" alt="Signature" style="margin-bottom: 5px;">
+                  <hr style="width: 120px; margin: 0 auto 5px; border: 1px solid #000;">
+                  <p style="color: #000; font-size: 22px; margin: 0;">ব্যাংক কর্তৃপক্ষের স্বাক্ষর</p>
+                </div>
+                <div style="text-align: center; position: relative;">
+                  <div style="height: 35px; margin-bottom: 5px;">
+                    <img id="stamp-signature" src="" alt="Signature" style="width: 120px; height: 35px; display: none;">
+                    <span id="signature-placeholder" style="color: #666; font-size: 18px;">Signature</span>
+                  </div>
+                  <hr style="width: 120px; margin: 0 auto 5px; border: 1px solid #000;">
+                  <p style="color: #000; font-size: 22px; margin: 0;">ঋণ গ্রহীতার স্বাক্ষর</p>
+                </div>
+              </div>
+              
+              <!-- Note -->
+              <div style="margin-top: 30px; text-align: center;">
+                <p style="font-size: 23px; font-weight: 400; color: #000; margin: 0; font-style: italic;">বিঃদ্রঃ ঋণের শর্তাবলী পালন না করলে ব্যাংক কর্তৃপক্ষ আইনানুগ ব্যবস্থা নিতে বাধ্য থাকিবে।</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ID Card Form -->
+  <div class="document-form" id="idcard-form" style="display: none;">
+    <input type="file" placeholder="Image" onchange="handleImageUpload(this, 'idcard-profile-img')" />
+    <input type="text" placeholder="Name" oninput="updateField('idcard-name', this.value)" />
+    <select onchange="updateField('idcard-position', this.value)">
+      <option value="Customer Service">Customer Service</option>
+      <option value="Loan Manager">Loan Manager</option>
+      <option value="Credit Manager">Credit Manager</option>
+      <option value="General Manager">General Manager</option>
+    </select>
+    <input type="text" placeholder="ID No" oninput="updateField('idcard-id', this.value)" />
+    <input type="text" placeholder="E-mail" oninput="updateField('idcard-email', this.value)" />
+    <input type="text" placeholder="Phone" oninput="updateField('idcard-phone', this.value)" />
+    <button onclick="downloadDocument('idcard')">Download</button>
+  </div>
+
+  <!-- Approval Form -->
+  <div class="form-fields" id="approval-form" style="display: none;">
+    <h3 style="color: white; margin-bottom: 15px;">Approval Details</h3>
+    <input type="file" placeholder="Image" onchange="handleImageUpload(this, 'approval-photo')" />
+    <input type="text" placeholder="Application Date" oninput="updateField('approval-date', this.value)" />
+    <input type="text" placeholder="Customer Name" oninput="updateField('approval-name', this.value)" />
+    <input type="text" placeholder="NID Number" oninput="updateField('approval-nid', this.value)" />
+    <input type="text" placeholder="Loan Amount" oninput="updateField('approval-amount', this.value)" />
+    <input type="text" placeholder="Loan Term" oninput="updateField('approval-duration', this.value)" />
+    <input type="text" placeholder="Interest Rate" oninput="updateField('approval-interest', this.value)" />
+    <input type="text" placeholder="Installment" oninput="updateField('approval-installment', this.value)" />
+    <button onclick="downloadDocument('approval')">Download</button>
+  </div>
+
+  <!-- Cheque Form -->
+  <div class="form-fields" id="cheque-form" style="display: none;">
+    <h3 style="color: white; margin-bottom: 15px;">Cheque Details</h3>
+    <input type="text" placeholder="Date" oninput="updateField('cheque-date', this.value)" />
+    <input type="text" placeholder="Pay to" oninput="updateField('cheque-name', this.value)" />
+    <input type="text" placeholder="Amount" oninput="updateField('cheque-amount', this.value)" />
+    <input type="text" placeholder="To The Order Of" oninput="updateField('cheque-account', this.value)" />
+    <button onclick="downloadDocument('cheque')">Download</button>
+  </div>
+
+  <!-- Insurance Form -->
+  <div class="form-fields" id="insurance-form" style="display: none;">
+    <h3 style="color: white; margin-bottom: 15px;">Insurance Details</h3>
+    <input type="file" placeholder="Choose File" onchange="handleImageUpload(this, 'insurance-profile-img')" />
+    <input type="text" placeholder="Name" oninput="updateField('insurance-name', this.value)" />
+    <input type="text" placeholder="Father's name" oninput="updateField('insurance-father', this.value)" />
+    <input type="text" placeholder="Mother's name" oninput="updateField('insurance-mother', this.value)" />
+    <input type="text" placeholder="Address" oninput="updateField('insurance-address', this.value)" />
+    <input type="text" placeholder="Post office" oninput="updateField('insurance-post', this.value)" />
+    <input type="text" placeholder="Police station" oninput="updateField('insurance-thana', this.value)" />
+    <input type="text" placeholder="District" oninput="updateField('insurance-district', this.value)" />
+    <input type="text" placeholder="ID No" oninput="updateField('insurance-id', this.value)" />
+    <button onclick="downloadDocument('insurance')">Download</button>
+  </div>
+
+  <!-- Stamp Form -->
+  <div class="form-fields" id="stamp-form" style="display: none;">
+    <h3 style="color: white; margin-bottom: 15px;">Stamp Details</h3>
+    <input type="file" placeholder="Choose File" onchange="handleImageUpload(this, 'stamp-photo')" />
+    <input type="file" placeholder="Upload Signature" onchange="handleSignatureUpload(this, 'stamp-signature')" />
+    <input type="text" placeholder="Name" oninput="updateField('stamp-name', this.value)" />
+    <input type="text" placeholder="ID No" oninput="updateField('stamp-id', this.value)" />
+    <input type="text" placeholder="Date" oninput="updateField('stamp-date', this.value)" />
+    <input type="text" placeholder="Amount" oninput="updateField('stamp-amount', this.value)" />
+    <input type="text" placeholder="Duration" oninput="updateField('stamp-duration', this.value)" />
+    <input type="text" placeholder="Installment" oninput="updateField('stamp-installment', this.value)" />
+    <input type="text" placeholder="Father's name" oninput="updateField('stamp-father', this.value)" />
+    <input type="text" placeholder="Address" oninput="updateField('stamp-address', this.value)" />
+    <button onclick="downloadDocument('stamp')">Download</button>
+    <button onclick="testSnapDOM()" style="margin-left: 10px; background: #17a2b8; color: white;">Test SnapDOM</button>
+  </div>
+  
+
+  <script>
+
+    // Clear all transaction field values on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      const transactionFields = ['transaction-type', 'transaction-id', 'transaction-date', 'from-bank', 'to-bank', 'from-account', 'to-account', 'account-name', 'mobile-banking', 'transaction-amount', 'depositor-name', 'generated-time'];
+      transactionFields.forEach(fieldId => {
+        const element = document.getElementById(fieldId);
+        if (element) {
+          const valueSpan = element.querySelector('.value');
+          if (valueSpan) {
+            valueSpan.textContent = '';
+          }
+        }
+      });
+    });
+
+    function showDocument(docType, buttonElement = null) {
+      // Hide all document templates
+      const receipt = document.getElementById('receipt');
+      const moneyReceiptFields = document.getElementById('money-receipt-fields');
+      const transactionFields = document.getElementById('transaction-fields');
+      const transactionDisplay = document.getElementById('transaction-display');
+      const templates = document.querySelectorAll('.empty-document');
+      
+      // Hide all new document types
+      const newDocTypes = ['idcard', 'insurance', 'stamp', 'cheque', 'approval'];
+      newDocTypes.forEach(type => {
+        const display = document.getElementById(type + '-display');
+        const form = document.getElementById(type + '-form');
+        if (display) display.style.display = 'none';
+        if (form) form.style.display = 'none';
+      });
+      
+      // Hide all templates and forms
+      templates.forEach(template => template.style.display = 'none');
+      moneyReceiptFields.style.display = 'none';
+      transactionFields.style.display = 'none';
+      transactionDisplay.style.display = 'none';
+      receipt.style.display = 'none';
+      
+      // Remove active class from all buttons
+      document.querySelectorAll('.doc-btn').forEach(btn => btn.classList.remove('active'));
+      
+      // Add active class to button (either passed parameter or event target)
+      if (buttonElement) {
+        buttonElement.classList.add('active');
+      } else if (event && event.target) {
+        event.target.classList.add('active');
+      } else {
+        // Find button by docType and activate it
+        const targetButton = document.querySelector(`button[onclick="showDocument('${docType}')"]`);
+        if (targetButton) {
+          targetButton.classList.add('active');
+        }
+      }
+      
+      if (docType === 'moneyreceipt') {
+        // Show Money Receipt
+        receipt.style.display = 'block';
+        moneyReceiptFields.style.display = 'block';
+      } else if (docType === 'transaction') {
+        // Show Transaction
+        transactionDisplay.style.display = 'block';
+        transactionFields.style.display = 'block';
+      } else if (newDocTypes.includes(docType)) {
+        // Show new document types
+        const display = document.getElementById(docType + '-display');
+        const form = document.getElementById(docType + '-form');
+        if (display) display.style.display = 'block';
+        if (form) form.style.display = 'block';
+      } else {
+        // Show empty template
+        document.getElementById(docType + '-template').style.display = 'block';
+      }
+    }
+
+    
+
+    function updateField(id, value) {
+      // Handle transaction fields with new structure
+      const transactionFields = ['transaction-type', 'transaction-id', 'transaction-date', 'from-bank', 'to-bank', 'from-account', 'to-account', 'account-name', 'mobile-banking', 'transaction-amount', 'depositor-name', 'generated-time'];
+      
+      // Handle insurance fields with Bangla serial numbers
+      const insuranceFields = ['insurance-name', 'insurance-father', 'insurance-mother', 'insurance-address', 'insurance-post', 'insurance-thana', 'insurance-district', 'insurance-id'];
+      const insuranceSerialNumbers = {
+        'insurance-name': '১. ',
+        'insurance-father': '২. ', 
+        'insurance-mother': '৩. ',
+        'insurance-address': '৪. ',
+        'insurance-post': '৫. ',
+        'insurance-thana': '৬. ',
+        'insurance-district': '৭. ',
+        'insurance-id': '৮. '
+      };
+      
+      if (transactionFields.includes(id)) {
+        const element = document.getElementById(id);
+        if (id === 'transaction-center-date') {
+          // Special handling for transaction center date
+          element.textContent = value;
+        } else {
+          const valueSpan = element.querySelector('.value');
+          if (valueSpan) {
+            valueSpan.textContent = value;
+          }
+        }
+      } else if (insuranceFields.includes(id)) {
+        // For insurance fields, show only the value without serial number
+        document.getElementById(id).innerText = value;
+      } else {
+        document.getElementById(id).innerText = value;
+      }
+      
+      // Handle additional stamp template fields
+      if (id === 'stamp-name') {
+        const nameStrong = document.getElementById('stamp-name-strong');
+        const nameStrong2 = document.getElementById('stamp-name-strong2');
+        if (nameStrong) nameStrong.textContent = value;
+        if (nameStrong2) nameStrong2.textContent = value;
+      }
+      if (id === 'stamp-amount') {
+        const amountText = document.getElementById('stamp-amount-text');
+        if (amountText) amountText.textContent = value;
+      }
+      if (id === 'stamp-duration') {
+        const durationText = document.getElementById('stamp-duration-text');
+        if (durationText) durationText.textContent = value;
+      }
+      if (id === 'stamp-installment') {
+        const installmentText = document.getElementById('stamp-installment-text');
+        if (installmentText) installmentText.textContent = value;
+      }
+    }
+
+
+    function handleImageUpload(input, targetId) {
+      const file = input.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const imgElement = document.getElementById(targetId);
+          imgElement.src = e.target.result;
+          imgElement.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function handleSignatureUpload(input, targetId) {
+      const file = input.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const imgElement = document.getElementById(targetId);
+          imgElement.src = e.target.result;
+          imgElement.style.display = 'block';
+          
+          // Hide signature placeholder
+          if (targetId === 'stamp-signature') {
+            const placeholder = document.getElementById('signature-placeholder');
+            if (placeholder) {
+              placeholder.style.display = 'none';
+            }
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // Set insurance as default on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      // Get insurance button and show insurance section by default
+      const insuranceBtn = document.querySelector('button[onclick="showDocument(\'insurance\')"]');
+      if (insuranceBtn) {
+        showDocument('insurance', insuranceBtn);
+      } else {
+        showDocument('insurance');
+      }
+    });
+
+    function downloadDocument(docType) {
+      const displayElement = document.getElementById(docType + '-display');
+      if (!displayElement) {
+        console.error('Element not found:', docType + '-display');
+        alert('Document element not found. Please try again.');
+        return;
+      }
+      
+      // Check if SnapDOM is loaded
+      if (typeof snapdom === 'undefined') {
+        console.error('SnapDOM library not loaded, using fallback');
+        console.log('Falling back to HTML download...');
+        downloadAsHTML(docType);
+        return;
+      }
+      
+      console.log('Starting download for:', docType);
+      console.log('Element found:', displayElement);
+      
+      try {
+        // Wait for fonts to load before capturing
+        document.fonts.ready.then(() => {
+          console.log('Fonts loaded, capturing image...');
+          
+          // Use SnapDOM to capture the element as an image
+          snapdom.toPng(displayElement, {
+          scale: 2, // High resolution
+            backgroundColor: '#ffffff',
+            quality: 1.0,
+            embedFonts: true, // Ensure fonts are embedded
+            useProxy: true // Handle CORS issues
+          }).then(img => {
+            console.log('SnapDOM image created:', img);
+            // Create download link
+            const a = document.createElement('a');
+            a.href = img.src;
+            a.download = docType + '_document.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            console.log('Document downloaded successfully');
+          }).catch(error => {
+            console.error('SnapDOM error:', error);
+            console.log('Falling back to HTML download...');
+            // Fallback to HTML download
+            downloadAsHTML(docType);
+          });
+        }).catch(() => {
+          // If fonts.ready fails, proceed anyway
+          console.log('Font loading check failed, proceeding with capture...');
+          
+          snapdom.toPng(displayElement, {
+            scale: 2,
+            backgroundColor: '#ffffff',
+            quality: 1.0,
+            embedFonts: true,
+            useProxy: true
+          }).then(img => {
+            console.log('SnapDOM image created:', img);
+            const a = document.createElement('a');
+            a.href = img.src;
+            a.download = docType + '_document.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            console.log('Document downloaded successfully');
+          }).catch(error => {
+            console.error('SnapDOM error:', error);
+            downloadAsHTML(docType);
+          });
+        });
+      } catch (error) {
+        console.error('Function error:', error);
+        alert('Download function error: ' + error.message);
+      }
+    }
+
+    // Fallback HTML download function
+    function downloadAsHTML(docType) {
+      const displayElement = document.getElementById(docType + '-display');
+      if (!displayElement) {
+        alert('Document element not found. Please try again.');
+        return;
+      }
+      
+      try {
+        const htmlContent = displayElement.outerHTML;
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = docType + '_document.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        console.log('HTML document downloaded successfully');
+      } catch (error) {
+        console.error('HTML download error:', error);
+        alert('Error downloading document: ' + error.message);
+      }
+    }
+
+    // Test SnapDOM function
+    function testSnapDOM() {
+      console.log('Testing SnapDOM...');
+      
+      if (typeof snapdom === 'undefined') {
+        alert('❌ SnapDOM library not loaded! Please check your internet connection and refresh the page.');
+        console.error('SnapDOM is undefined');
+        return;
+      }
+      
+      console.log('✅ SnapDOM library loaded');
+      
+      // Test with a simple element
+      const testElement = document.querySelector('.form-fields');
+      if (!testElement) {
+        alert('❌ No test element found');
+        return;
+      }
+      
+      console.log('Testing with element:', testElement);
+      
+      try {
+        document.fonts.ready.then(() => {
+          snapdom.toPng(testElement, {
+            scale: 1,
+            backgroundColor: '#ffffff',
+            quality: 0.8,
+            embedFonts: true,
+            useProxy: true
+          }).then(img => {
+            console.log('✅ SnapDOM test successful! Image:', img);
+            alert('✅ SnapDOM is working correctly! Check console for details.');
+          }).catch(error => {
+            console.error('❌ SnapDOM test failed:', error);
+            alert('❌ SnapDOM test failed: ' + error.message);
+          });
+        }).catch(() => {
+          snapdom.toPng(testElement, {
+            scale: 1,
+            backgroundColor: '#ffffff',
+            quality: 0.8,
+            embedFonts: true,
+            useProxy: true
+          }).then(img => {
+            console.log('✅ SnapDOM test successful! Image:', img);
+            alert('✅ SnapDOM is working correctly! Check console for details.');
+          }).catch(error => {
+            console.error('❌ SnapDOM test failed:', error);
+            alert('❌ SnapDOM test failed: ' + error.message);
+          });
+        });
+      } catch (error) {
+        console.error('❌ SnapDOM test error:', error);
+        alert('❌ SnapDOM test error: ' + error.message);
+      }
+    }
+
+  // Universal smart cropping function
+  function smartCropCanvas(canvas) {
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    
+    let minX = canvas.width;
+    let minY = canvas.height;
+    let maxX = 0;
+    let maxY = 0;
+    
+    // Scan for non-white pixels to find content bounds
+    for (let y = 0; y < canvas.height; y++) {
+      for (let x = 0; x < canvas.width; x++) {
+        const index = (y * canvas.width + x) * 4;
+        const r = data[index];
+        const g = data[index + 1];
+        const b = data[index + 2];
+        const a = data[index + 3];
+        
+        // Check if pixel is not white/transparent (conservative threshold)
+        if (a > 0 && (r < 240 || g < 240 || b < 240)) {
+          minX = Math.min(minX, x);
+          minY = Math.min(minY, y);
+          maxX = Math.max(maxX, x);
+          maxY = Math.max(maxY, y);
+        }
+      }
+    }
+    
+    // Add padding but crop more from left side
+    const padding = 20;
+    const leftPadding = 0; // Minimal left padding
+    minX = Math.max(0, minX - leftPadding);
+    minY = Math.max(0, minY - padding);
+    maxX = Math.min(canvas.width, maxX + padding);
+    maxY = Math.min(canvas.height, maxY + padding);
+    
+    // Crop more from the left side to remove white space
+    if (minX > canvas.width * 0.15) {
+      minX = Math.max(0, minX - 50); // Crop more from left
+    }
+    
+    // Create cropped canvas
+    const croppedCanvas = document.createElement('canvas');
+    croppedCanvas.width = maxX - minX;
+    croppedCanvas.height = maxY - minY;
+    const croppedCtx = croppedCanvas.getContext('2d');
+    
+    // Draw the cropped content
+    croppedCtx.drawImage(canvas, minX, minY, maxX - minX, maxY - minY, 0, 0, maxX - minX, maxY - minY);
+    
+    return croppedCanvas;
+  }
+
+  function downloadTransaction() {
+    const button = document.querySelector('button[onclick="downloadTransaction()"]');
+    const originalText = button.textContent;
+    
+    try {
+      button.textContent = "Generating...";
+      button.disabled = true;
+      
+      // Capture at natural size (max-width: 500px)
+      // Wait for fonts to load before capturing
+      document.fonts.ready.then(() => {
+        // Use SnapDOM to capture the transaction display as an image
+        snapdom.toPng(document.getElementById("transaction-display"), {
+          scale: 2, // High resolution
+          backgroundColor: '#ffffff',
+          quality: 1.0,
+          embedFonts: true,
+          useProxy: true
+        }).then(img => {
+          // Create download link
+        const link = document.createElement('a');
+          link.href = img.src;
+        link.download = 'transaction_summary.png';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }).catch(error => {
+          console.error('SnapDOM error:', error);
+          alert('Error generating document: ' + error.message);
+        });
+      }).catch(() => {
+        // If fonts.ready fails, proceed anyway
+        snapdom.toPng(document.getElementById("transaction-display"), {
+        scale: 2,
+          backgroundColor: '#ffffff',
+          quality: 1.0,
+          embedFonts: true,
+          useProxy: true
+        }).then(img => {
+        const link = document.createElement('a');
+          link.href = img.src;
+        link.download = 'transaction_summary.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        }).catch(error => {
+          console.error('SnapDOM error:', error);
+          alert('Error generating document: ' + error.message);
+        });
+      });
+        
+        // Reset button
+        button.textContent = originalText;
+        button.disabled = false;
+      
+    } catch (error) {
+      console.error('Function error:', error);
+      alert('Download function error. Please try again.');
+      button.textContent = originalText;
+      button.disabled = false;
+    }
+  }
+
+    function saveTransactionToServer() {
+      const button = document.querySelector('button[onclick="saveTransactionToServer()"]');
+      const originalText = button.textContent;
+      
+      try {
+        button.textContent = "Saving...";
+        button.disabled = true;
+        
+        // Capture transaction data
+        const transactionData = {
+          transaction_type: document.getElementById('transaction-type').innerText,
+          transaction_id: document.getElementById('transaction-id').innerText,
+          transaction_date: document.getElementById('transaction-date').innerText,
+          from_bank: document.getElementById('from-bank').innerText,
+          to_bank: document.getElementById('to-bank').innerText,
+          from_account: document.getElementById('from-account').innerText,
+          to_account: document.getElementById('to-account').innerText,
+          account_name: document.getElementById('account-name').innerText,
+          mobile_banking: document.getElementById('mobile-banking').innerText,
+          transaction_amount: document.getElementById('transaction-amount').innerText,
+          depositor_name: document.getElementById('depositor-name').innerText,
+          generated_time: document.getElementById('generated-time').innerText
+        };
+        
+        // Convert image to data URL
+        const img = document.querySelector('#transaction-display img');
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        ctx.drawImage(img, 0, 0);
+        const imgDataURL = canvas.toDataURL('image/png');
+        
+        // Send to server
+        fetch('save_transaction_no_db.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            imageData: imgDataURL,
+            transactionData: transactionData
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('Transaction saved successfully!');
+          } else {
+            alert('Error saving transaction: ' + data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error saving transaction. Please try again.');
+        })
+        .finally(() => {
+          button.textContent = originalText;
+          button.disabled = false;
+        });
+        
+      } catch (error) {
+        console.error('Function error:', error);
+        alert('Save function error. Please try again.');
+        button.textContent = originalText;
+        button.disabled = false;
+      }
+    }
+
+    function downloadReceipt() {
+      const button = document.querySelector('button');
+      const originalText = button.textContent;
+      
+      try {
+        button.textContent = "Generating...";
+        button.disabled = true;
+        
+        // Convert image to data URL first to avoid tainted canvas
+        const img = document.querySelector('#receipt img');
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Set canvas size to match image
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        
+        // Draw image to canvas
+        ctx.drawImage(img, 0, 0);
+        
+        // Get image data URL
+        const imgDataURL = canvas.toDataURL('image/png');
+        
+        // Create a new image element with data URL
+        const newImg = new Image();
+        newImg.onload = function() {
+          // Replace the original image with the data URL version
+          img.src = imgDataURL;
+          
+          // Use SnapDOM to capture the receipt as an image
+          setTimeout(() => {
+            document.fonts.ready.then(() => {
+              snapdom.toPng(document.getElementById("receipt"), {
+              scale: 2, // High resolution
+                backgroundColor: '#ffffff',
+                quality: 1.0,
+                embedFonts: true,
+                useProxy: true
+              }).then(img => {
+                // Create download link
+              const link = document.createElement('a');
+                link.href = img.src;
+              link.download = 'money_receipt.png';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              
+              // Reset button
+              button.textContent = originalText;
+              button.disabled = false;
+              }).catch(error => {
+                console.error('SnapDOM error:', error);
+                alert('Error generating document: ' + error.message);
+              button.textContent = originalText;
+              button.disabled = false;
+              });
+            }).catch(() => {
+              snapdom.toPng(document.getElementById("receipt"), {
+                scale: 2,
+                backgroundColor: '#ffffff',
+                quality: 1.0,
+                embedFonts: true,
+                useProxy: true
+              }).then(img => {
+                const link = document.createElement('a');
+                link.href = img.src;
+                link.download = 'money_receipt.png';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                button.textContent = originalText;
+                button.disabled = false;
+              }).catch(error => {
+                console.error('SnapDOM error:', error);
+                alert('Error generating document: ' + error.message);
+                button.textContent = originalText;
+                button.disabled = false;
+              });
+            });
+          }, 100);
+        };
+        newImg.src = imgDataURL;
+        
+      } catch (error) {
+        console.error('Function error:', error);
+        alert('Download function error. Please try the HTML download instead.');
+        button.textContent = originalText;
+        button.disabled = false;
+      }
+    }
+
+    function downloadAsHTML() {
+      const receiptElement = document.getElementById("receipt");
+      const htmlContent = receiptElement.outerHTML;
+      const fullHTML = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Money Receipt</title>
+  <style>
+    body { margin: 0; padding: 20px; background: white; }
+    .receipt-container { position: relative; display: inline-block; }
+    .receipt-container img { width: 800px; }
+    .field { position: absolute; font-family: 'Poppins', Arial, sans-serif; font-size: 20px; font-weight: 400; color: #000; white-space: nowrap; line-height: 1.2; }
+    #no { top: 110px; left: 80px; font-size: 16px; }
+    #date { top: 45px; right: 50px; font-size: 16px; }
+    #from { top: 180px; left: 50px; font-size: 16px; }
+    #amount { top: 220px; left: 50px; font-size: 16px; }
+    #inword { top: 260px; left: 50px; font-size: 16px; }
+    #for { top: 300px; left: 50px; font-size: 16px; }
+    #acct { top: 340px; left: 50px; font-size: 16px; }
+    #center-date { position: absolute; top: 130px; left: 50%; transform: translateX(-50%); font-size: 24px; font-weight: bold; color: red; text-align: center; white-space: nowrap; z-index: 10; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+  </style>
+</head>
+<body>
+  ${htmlContent}
+</body>
+</html>`;
+      
+      const blob = new Blob([fullHTML], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'money_receipt.html';
+      document.body.appendChild(link);
+        link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    function saveToServer() {
+      const button = document.querySelector('button[onclick="saveToServer()"]');
+      const originalText = button.textContent;
+      
+      try {
+        button.textContent = "Saving...";
+        button.disabled = true;
+        
+        // Convert image to data URL first to avoid tainted canvas
+        const img = document.querySelector('#receipt img');
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Set canvas size to match image
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        
+        // Draw image to canvas
+        ctx.drawImage(img, 0, 0);
+        
+        // Get image data URL
+        const imgDataURL = canvas.toDataURL('image/png');
+        
+        // Create a new image element with data URL
+        const newImg = new Image();
+        newImg.onload = function() {
+          // Replace the original image with the data URL version
+          img.src = imgDataURL;
+          
+          // Use SnapDOM to capture the receipt as an image
+          setTimeout(() => {
+            document.fonts.ready.then(() => {
+              snapdom.toPng(document.getElementById("receipt"), {
+                scale: 2, // High resolution
+                backgroundColor: '#ffffff',
+                quality: 1.0,
+                embedFonts: true,
+                useProxy: true
+              }).then(img => {
+              // Get all form data
+              const receiptData = {
+                no: document.getElementById('no').innerText,
+                date: document.getElementById('date').innerText,
+                from: document.getElementById('from').innerText,
+                amount: document.getElementById('amount').innerText,
+                inword: document.getElementById('inword').innerText,
+                for: document.getElementById('for').innerText,
+                acct: document.getElementById('acct').innerText,
+                paid: document.getElementById('paid').innerText,
+                center_date: document.getElementById('center-date').innerText
+              };
+              
+        // Send to server
+        fetch('save_receipt_no_db.php', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    imageData: img.src,
+                  receiptData: receiptData
+                })
+              })
+              .then(response => response.json())
+              .then(data => {
+                if (data.success) {
+                  alert('Receipt saved successfully! File: ' + data.filename);
+                } else {
+                  alert('Error saving receipt: ' + data.error);
+                }
+                button.textContent = originalText;
+                button.disabled = false;
+              })
+              .catch(error => {
+                console.error('Error:', error);
+                alert('Error saving receipt. Please try again.');
+                button.textContent = originalText;
+                button.disabled = false;
+              });
+              }).catch(error => {
+                console.error('SnapDOM error:', error);
+              alert('Error generating receipt. Please try again.');
+              button.textContent = originalText;
+              button.disabled = false;
+              });
+            }).catch(() => {
+              snapdom.toPng(document.getElementById("receipt"), {
+                scale: 2,
+                backgroundColor: '#ffffff',
+                quality: 1.0,
+                embedFonts: true,
+                useProxy: true
+              }).then(img => {
+                const receiptData = {
+                  no: document.getElementById('no').innerText,
+                  date: document.getElementById('date').innerText,
+                  from: document.getElementById('from').innerText,
+                  amount: document.getElementById('amount').innerText,
+                  inword: document.getElementById('inword').innerText,
+                  for: document.getElementById('for').innerText,
+                  acct: document.getElementById('acct').innerText,
+                  paid: document.getElementById('paid').innerText,
+                  center_date: document.getElementById('center-date').innerText
+                };
+                
+                fetch('save_receipt_no_db.php', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    imageData: img.src,
+                    receiptData: receiptData
+                  })
+                })
+                .then(response => response.json())
+                .then(data => {
+                  if (data.success) {
+                    alert('Receipt saved successfully! File: ' + data.filename);
+                  } else {
+                    alert('Error saving receipt: ' + data.error);
+                  }
+                  button.textContent = originalText;
+                  button.disabled = false;
+                })
+                .catch(error => {
+                  console.error('Error:', error);
+                  alert('Error saving receipt. Please try again.');
+                  button.textContent = originalText;
+                  button.disabled = false;
+                });
+              }).catch(error => {
+                console.error('SnapDOM error:', error);
+                alert('Error generating receipt. Please try again.');
+                button.textContent = originalText;
+                button.disabled = false;
+              });
+            });
+          }, 100);
+        };
+        newImg.src = imgDataURL;
+        
+      } catch (error) {
+        console.error('Function error:', error);
+        alert('Error saving receipt. Please try again.');
+        button.textContent = originalText;
+        button.disabled = false;
+      }
+    }
+  </script>
+
+</body>
+</html>

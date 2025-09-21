@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Download Verification</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .verification { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .info { background: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .file-info { margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>Download Verification Tool</h1>
+    
+    <div class="verification info">
+        <h3>Instructions:</h3>
+        <ol>
+            <li>Download PNG files from the main application</li>
+            <li>Upload them here to verify cropping quality</li>
+            <li>Check if white space has been properly removed</li>
+        </ol>
+    </div>
+    
+    <div class="verification">
+        <h3>Upload PNG Files to Verify:</h3>
+        <input type="file" id="fileInput" accept=".png" multiple>
+        <button onclick="analyzeFiles()">Analyze Files</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        function analyzeFiles() {
+            const fileInput = document.getElementById('fileInput');
+            const files = fileInput.files;
+            const resultsDiv = document.getElementById('results');
+            
+            if (files.length === 0) {
+                resultsDiv.innerHTML = '<div class="verification error">Please select PNG files to analyze.</div>';
+                return;
+            }
+            
+            resultsDiv.innerHTML = '<div class="verification info">Analyzing files...</div>';
+            
+            let analysisResults = [];
+            
+            Array.from(files).forEach((file, index) => {
+                if (file.type === 'image/png') {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = new Image();
+                        img.onload = function() {
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                            ctx.drawImage(img, 0, 0);
+                            
+                            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                            const data = imageData.data;
+                            
+                            // Analyze white space
+                            let whitePixels = 0;
+                            let totalPixels = 0;
+                            let contentBounds = {
+                                minX: canvas.width,
+                                minY: canvas.height,
+                                maxX: 0,
+                                maxY: 0
+                            };
+                            
+                            for (let y = 0; y < canvas.height; y++) {
+                                for (let x = 0; x < canvas.width; x++) {
+                                    const index = (y * canvas.width + x) * 4;
+                                    const r = data[index];
+                                    const g = data[index + 1];
+                                    const b = data[index + 2];
+                                    const a = data[index + 3];
+                                    
+                                    totalPixels++;
+                                    
+                                    // Check if pixel is white
+                                    if (a > 0 && r > 240 && g > 240 && b > 240) {
+                                        whitePixels++;
+                                    } else if (a > 0) {
+                                        // Non-white content found
+                                        contentBounds.minX = Math.min(contentBounds.minX, x);
+                                        contentBounds.minY = Math.min(contentBounds.minY, y);
+                                        contentBounds.maxX = Math.max(contentBounds.maxX, x);
+                                        contentBounds.maxY = Math.max(contentBounds.maxY, y);
+                                    }
+                                }
+                            }
+                            
+                            const whitePercentage = (whitePixels / totalPixels) * 100;
+                            const contentArea = (contentBounds.maxX - contentBounds.minX) * (contentBounds.maxY - contentBounds.minY);
+                            const totalArea = canvas.width * canvas.height;
+                            const contentPercentage = (contentArea / totalArea) * 100;
+                            
+                            analysisResults.push({
+                                name: file.name,
+                                size: `${canvas.width} x ${canvas.height}`,
+                                whitePercentage: whitePercentage.toFixed(1),
+                                contentPercentage: contentPercentage.toFixed(1),
+                                contentBounds: contentBounds,
+                                quality: whitePercentage < 30 ? 'Good' : whitePercentage < 50 ? 'Fair' : 'Poor'
+                            });
+                            
+                            if (analysisResults.length === files.length) {
+                                displayResults(analysisResults);
+                            }
+                        };
+                        img.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+        
+        function displayResults(results) {
+            const resultsDiv = document.getElementById('results');
+            let html = '<h3>Analysis Results:</h3>';
+            
+            results.forEach(result => {
+                const qualityClass = result.quality === 'Good' ? 'success' : result.quality === 'Fair' ? 'info' : 'error';
+                
+                html += `
+                    <div class="verification ${qualityClass}">
+                        <h4>${result.name}</h4>
+                        <div class="file-info">
+                            <p><strong>Dimensions:</strong> ${result.size}</p>
+                            <p><strong>White Space:</strong> ${result.whitePercentage}%</p>
+                            <p><strong>Content Area:</strong> ${result.contentPercentage}%</p>
+                            <p><strong>Quality:</strong> ${result.quality}</p>
+                            <p><strong>Content Bounds:</strong> (${result.contentBounds.minX}, ${result.contentBounds.minY}) to (${result.contentBounds.maxX}, ${result.contentBounds.maxY})</p>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            resultsDiv.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

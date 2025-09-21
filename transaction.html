@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Transaction Summary Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Cossette+Titre:wght@400&family=Tiro+Bangla:wght@400&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@mindblowing/snapdom"></script>
+  <style>
+    body {
+      font-family: 'Montserrat', Arial, sans-serif;
+      text-align: center;
+      background: #111827;
+      color: white;
+    }
+
+    .form-fields {
+      margin-top: 20px;
+    }
+
+    .form-fields input {
+      margin: 5px;
+      padding: 8px 12px;
+      width: 250px;
+      font-family: 'Montserrat', Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      border: 2px solid #555;
+      border-radius: 6px;
+      background: #333;
+      color: white;
+      transition: border-color 0.3s ease;
+    }
+
+    .form-fields input::placeholder {
+      color: #ccc;
+    }
+
+    .form-fields input:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 12px 24px;
+      font-family: 'Montserrat', Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      background: green;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    button:hover {
+      background: #0056b3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* Transaction Document Styling */
+    .transaction-display-container {
+      text-align: center;
+      margin: 20px 0;
+      padding: 0 20px;
+      max-width: 100%;
+      overflow-x: auto;
+    }
+
+    .transaction-container {
+      position: relative;
+      display: inline-block;
+      max-width: 100%;
+      overflow: hidden;
+    }
+
+    .transaction-container .field {
+      position: absolute;
+      font-family: 'Montserrat', Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: #000;
+      white-space: nowrap;
+      width: 300px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    
+    .transaction-container .field .label {
+      display: inline-block;
+      text-align: left;
+      width: 120px;
+      vertical-align: top;
+      float: left;
+    }
+    
+    .transaction-container .field .colon {
+      display: inline-block;
+      text-align: center;
+      width: 20px;
+      vertical-align: top;
+      float: left;
+    }
+    
+    .transaction-container .field .value {
+      display: inline-block;
+      text-align: left;
+      width: 160px;
+      vertical-align: top;
+      float: left;
+    }
+    
+    .transaction-container .field::after {
+      content: "";
+      display: table;
+      clear: both;
+    }
+
+    /* Transaction Field Positioning - Center aligned */
+    #transaction-type { top: 133px; font-size: 20px; font-weight: 500; }
+    #transaction-id { top: 265px; font-size: 20px; font-weight: 500; }
+    #transaction-date { top: 300px; font-size: 20px; font-weight: 500; }
+    #from-bank { top: 196px; font-size: 20px; font-weight: 500; }
+    #to-bank { top: 370px; font-size: 20px; font-weight: 500; }
+    #from-account { top: 406px; font-size: 20px; font-weight: 500; }
+    #to-account { top: 440px; font-size: 20px; font-weight: 500; }
+    #account-name { top: 475px; font-size: 20px; font-weight: 500; }
+    #mobile-banking { top: 301px; font-size: 20px; font-weight: 500; }
+    #transaction-amount { top: 510px; font-size: 20px; font-weight: 500; }
+    #depositor-name { top: 343px; font-size: 20px; font-weight: 500; }
+    #generated-time { top: 580px; font-size: 20px; font-weight: 500; }
+    
+    /* Transaction Center Date - positioned in center like money receipt */
+    #transaction-center-date {
+      position: absolute;
+      top: 500px;
+      left: 77%;
+      transform: translateX(-50%) rotate(0deg);
+      font-family: 'Montserrat', Arial, sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: red;
+      text-align: center;
+      white-space: nowrap;
+      z-index: 10;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2 style="font-family: 'Montserrat', Arial, sans-serif; font-weight: 700; color: white; margin-bottom: 20px;">Transaction Summary Generator</h2>
+  
+  <!-- Transaction Document Display -->
+  <div class="transaction-display-container" id="transaction-display">
+    <div class="transaction-container">
+      <img src="wbb.png" alt="Transaction Template" style="width: 100%; max-width: 500px; height: auto;">
+      
+      <!-- Transaction Fields positioned based on wbb.png template -->
+      <div class="field" id="transaction-type">
+        <span class="label">Transaction Type</span><span class="colon">:</span><span class="value"></span>
+      </div>
+      <div class="field" id="transaction-id">
+        <span class="label">Transaction ID</span><span class="colon">:</span><span class="value"></span>
+      </div>
+      <div class="field" id="transaction-date">
+        <span class="label">Date</span><span class="colon">:</span><span class="value"></span>
+      </div>
+      <div class="field" id="from-bank">
+        <span class="label">From Bank</span><span class="colon">:</span><span class="value"></span>
+      </div>
+      <div class="field" id="to-bank">
+        <span class="label">To Bank</span><span class="colon">:</span><span class="value"></span>
+      </div>
+      <div class="field" id="from-account">
+        <span class="label">From Account</span><span class="colon">:</span><span class="value"></span>
+      </div>
+      <div class="field" id="to-account">
+        <span class="label">To Account</span><span class="colon">:</span><span class="value"></span>
+      </div>
+      <div class="field" id="account-name">
+        <span class="label">Account Name</span><span class="colon">:</span><span class="value"></span>
+      </div>
+      <div class="field" id="mobile-banking">
+        <span class="label">Mobile Banking</span><span class="colon">:</span><span class="value"></span>
+      </div>
+      <div class="field" id="transaction-amount">
+        <span class="label">Amount</span><span class="colon">:</span><span class="value"></span>
+      </div>
+      <div class="field" id="depositor-name">
+        <span class="label">Depositor Name</span><span class="colon">:</span><span class="value"></span>
+      </div>
+      <div class="field" id="generated-time">
+        <span class="label">Generated Time</span><span class="colon">:</span><span class="value"></span>
+      </div>
+      <div class="field" id="transaction-center-date"></div>
+    </div>
+  </div>
+
+  <!-- Transaction Form Fields -->
+  <div class="form-fields" id="transaction-fields">
+    <h3 style="color: white; margin-bottom: 15px;">Transaction Details</h3>
+    <input type="text" placeholder="Transaction Type" oninput="updateField('transaction-type', this.value)"><br>
+    <input type="text" placeholder="Transaction ID" oninput="updateField('transaction-id', this.value)"><br>
+    <input type="text" placeholder="Date" oninput="updateField('transaction-date', this.value)"><br>
+    <input type="text" placeholder="From Bank" oninput="updateField('from-bank', this.value)"><br>
+    <input type="text" placeholder="To Bank" oninput="updateField('to-bank', this.value)"><br>
+    <input type="text" placeholder="From Account" oninput="updateField('from-account', this.value)"><br>
+    <input type="text" placeholder="To Account" oninput="updateField('to-account', this.value)"><br>
+    <input type="text" placeholder="Account Name" oninput="updateField('account-name', this.value)"><br>
+    <input type="text" placeholder="Mobile Banking" oninput="updateField('mobile-banking', this.value)"><br>
+    <input type="text" placeholder="Amount" oninput="updateField('transaction-amount', this.value + ' BDT')"><br>
+    <input type="text" placeholder="Depositor Name" oninput="updateField('depositor-name', this.value)"><br>
+    <input type="text" placeholder="Generated Time" oninput="updateField('generated-time', this.value)"><br>
+    <input type="text" placeholder="Center Date (e.g., 22 JUN 2025)" oninput="updateField('transaction-center-date', this.value)" style="color: red; font-weight: bold;"><br>
+    <button onclick="downloadTransaction()">Download Transaction PNG</button>
+    <button onclick="saveTransactionToServer()" style="margin-left: 10px; background: orange;">Save Transaction to Server</button>
+  </div>
+
+  <script>
+    function updateField(id, value) {
+      // Handle transaction fields with new structure
+      const transactionFields = ['transaction-type', 'transaction-id', 'transaction-date', 'from-bank', 'to-bank', 'from-account', 'to-account', 'account-name', 'mobile-banking', 'transaction-amount', 'depositor-name', 'generated-time'];
+      
+      if (transactionFields.includes(id)) {
+        const element = document.getElementById(id);
+        const valueSpan = element.querySelector('.value');
+        if (valueSpan) {
+          valueSpan.textContent = value;
+        }
+      } else {
+        document.getElementById(id).innerText = value;
+      }
+    }
+
+    function downloadTransaction() {
+      const button = document.querySelector('button[onclick="downloadTransaction()"]');
+      const originalText = button.textContent;
+      
+      try {
+        button.textContent = "Generating...";
+        button.disabled = true;
+        
+        // Convert image to data URL first to avoid tainted canvas
+        const img = document.querySelector('#transaction-display img');
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Set canvas size to match image
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        
+        // Draw image to canvas
+        ctx.drawImage(img, 0, 0);
+        
+        // Get image data URL
+        const imgDataURL = canvas.toDataURL('image/png');
+        
+        // Create a new image element with data URL
+        const newImg = new Image();
+        newImg.onload = function() {
+          // Replace the original image with the data URL version
+          img.src = imgDataURL;
+          
+          // Use SnapDOM to capture the transaction display as an image
+          setTimeout(() => {
+            snapdom.toPng(document.getElementById("transaction-display"), {
+              scale: 2, // High resolution
+              backgroundColor: '#ffffff',
+              quality: 1.0
+            }).then(img => {
+              // Create download link
+              const link = document.createElement('a');
+              link.href = img.src;
+              link.download = 'transaction_summary.png';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              
+              // Reset button
+              button.textContent = originalText;
+              button.disabled = false;
+            }).catch(error => {
+              console.error('SnapDOM error:', error);
+              alert('Error generating document: ' + error.message);
+              button.textContent = originalText;
+              button.disabled = false;
+            });
+          }, 100);
+        };
+        newImg.src = imgDataURL;
+        
+      } catch (error) {
+        console.error('Function error:', error);
+        alert('Download function error. Please try again.');
+        button.textContent = originalText;
+        button.disabled = false;
+      }
+    }
+
+    function saveTransactionToServer() {
+      const button = document.querySelector('button[onclick="saveTransactionToServer()"]');
+      const originalText = button.textContent;
+      
+      try {
+        button.textContent = "Saving...";
+        button.disabled = true;
+        
+        // Capture transaction data
+        const transactionData = {
+          transaction_type: document.getElementById('transaction-type').querySelector('.value').textContent,
+          transaction_id: document.getElementById('transaction-id').querySelector('.value').textContent,
+          transaction_date: document.getElementById('transaction-date').querySelector('.value').textContent,
+          from_bank: document.getElementById('from-bank').querySelector('.value').textContent,
+          to_bank: document.getElementById('to-bank').querySelector('.value').textContent,
+          from_account: document.getElementById('from-account').querySelector('.value').textContent,
+          to_account: document.getElementById('to-account').querySelector('.value').textContent,
+          account_name: document.getElementById('account-name').querySelector('.value').textContent,
+          mobile_banking: document.getElementById('mobile-banking').querySelector('.value').textContent,
+          transaction_amount: document.getElementById('transaction-amount').querySelector('.value').textContent,
+          depositor_name: document.getElementById('depositor-name').querySelector('.value').textContent,
+          generated_time: document.getElementById('generated-time').querySelector('.value').textContent
+        };
+        
+        // Convert image to data URL
+        const img = document.querySelector('#transaction-display img');
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        ctx.drawImage(img, 0, 0);
+        const imgDataURL = canvas.toDataURL('image/png');
+        
+        // Send to server
+        fetch('save_transaction_no_db.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            imageData: imgDataURL,
+            transactionData: transactionData
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('Transaction saved successfully!');
+          } else {
+            alert('Error saving transaction: ' + data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error saving transaction. Please try again.');
+        })
+        .finally(() => {
+          button.textContent = originalText;
+          button.disabled = false;
+        });
+        
+      } catch (error) {
+        console.error('Function error:', error);
+        alert('Save function error. Please try again.');
+        button.textContent = originalText;
+        button.disabled = false;
+      }
+    }
+  </script>
+
+</body>
+</html>
