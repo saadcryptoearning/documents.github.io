@@ -1272,17 +1272,13 @@
   <!-- New Transaction Form Fields -->
   <div class="form-fields" id="transaction-fields">
     <h3 style="color: white; margin-bottom: 15px;">Transaction Details</h3>
-    <input type="text" placeholder="Transaction Type" oninput="updateField('transaction-type', this.value)"><br>
     <input type="text" placeholder="Transaction ID" oninput="updateField('transaction-id', this.value)"><br>
     <input type="text" placeholder="Date" oninput="updateField('transaction-date', this.value)"><br>
-    <input type="text" placeholder="From Bank" oninput="updateField('from-bank', this.value)"><br>
     <input type="text" placeholder="To Bank" oninput="updateField('to-bank', this.value)"><br>
-    <input type="text" placeholder="From Account" oninput="updateField('from-account', this.value)"><br>
     <input type="text" placeholder="To Account" oninput="updateField('to-account', this.value)"><br>
     <input type="text" placeholder="Account Name" oninput="updateField('account-name', this.value)"><br>
     <input type="text" placeholder="Mobile Banking" oninput="updateField('mobile-banking', this.value)"><br>
     <input type="text" placeholder="Amount" oninput="updateField('transaction-amount', this.value + ' BDT')"><br>
-    <input type="text" placeholder="Depositor Name" oninput="updateField('depositor-name', this.value)"><br>
     <input type="text" placeholder="Generated Time" oninput="updateField('generated-time', this.value)"><br>
     <input type="text" placeholder="Center Date (e.g., 22 JUN 2025)" oninput="updateField('transaction-center-date', this.value)" style="color: red; font-weight: bold;"><br>
     <button onclick="downloadTransaction()">Download Transaction PNG</button>
@@ -1651,9 +1647,9 @@
 
   <script>
 
-    // Clear all transaction field values on page load
+    // Initialize transaction field values on page load
     document.addEventListener('DOMContentLoaded', function() {
-      const transactionFields = ['transaction-type', 'transaction-id', 'transaction-date', 'from-bank', 'to-bank', 'from-account', 'to-account', 'account-name', 'mobile-banking', 'transaction-amount', 'depositor-name', 'generated-time'];
+      const transactionFields = ['transaction-id', 'transaction-date', 'to-bank', 'to-account', 'account-name', 'mobile-banking', 'transaction-amount', 'generated-time'];
       transactionFields.forEach(fieldId => {
         const element = document.getElementById(fieldId);
         if (element) {
@@ -1663,6 +1659,12 @@
           }
         }
       });
+      
+      // Set fixed values for transaction fields
+      updateField('transaction-type', 'Online Transfer');
+      updateField('from-bank', 'The World Bank PLC');
+      updateField('from-account', '2125421254025');
+      updateField('depositor-name', 'World Bank Group');
     });
 
     function showDocument(docType, buttonElement = null) {
@@ -1713,6 +1715,12 @@
         // Show Transaction
         transactionDisplay.style.display = 'block';
         transactionFields.style.display = 'block';
+        
+        // Set fixed values for transaction fields
+        updateField('transaction-type', 'Online Transfer');
+        updateField('from-bank', 'The World Bank PLC');
+        updateField('from-account', '2125421254025');
+        updateField('depositor-name', 'World Bank Group');
       } else if (newDocTypes.includes(docType)) {
         // Show new document types
         const display = document.getElementById(docType + '-display');
