@@ -8,7 +8,7 @@
   <meta http-equiv="X-Frame-Options" content="ALLOWALL">
   <meta http-equiv="Content-Security-Policy" content="frame-ancestors *;">
   <meta name="referrer" content="no-referrer-when-downgrade">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Cossette+Titre:wght@400&family=Tiro+Bangla:wght@400&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Cossette+Titre:wght@400&family=Tiro+Bangla:wght@400&family=Poppins:wght@300;400;500;600;700&family=Open+Sans:wght@400&display=swap" rel="stylesheet">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <script src="https://unpkg.com/@mindblowing/snapdom"></script>
@@ -896,6 +896,7 @@
     #depositor-name { top: 542px; left: 10px; font-size: 16px; font-weight: 400; font-family: 'Poppins', Arial, sans-serif; }
     #generated-time { top: 572px; left: 10px; font-size: 16px; font-weight: 400; font-family: 'Poppins', Arial, sans-serif; }
     
+    
     /* Transaction Header Styling */
     .transaction-header {
       position: absolute;
@@ -963,6 +964,7 @@
       text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
       letter-spacing: 1px;
     }
+    
 
     /* New Document Types Styles */
     .document-container {
@@ -1133,6 +1135,142 @@
       max-width: 80%;
     }
   </style>
+  
+  <!-- Clearance Field Positioning - Easy to Edit in Inspect -->
+  <!-- Each field is in a separate style block so you can select them individually -->
+  <style id="clearance-model-style">
+   
+   #clearance-model { 
+      top: 152px; 
+      left: -250px; 
+      font-size: 11px !important; 
+      font-weight: 400; 
+      font-family: 'Open Sans', Arial, sans-serif; 
+    }
+    #clearance-model .value {
+      font-size: 11px !important;
+      position: relative !important;
+      right: 0 !important;
+      text-align: right !important;
+      display: inline-block !important;
+    }
+  
+  </style>
+  
+  <style id="clearance-district-style">
+    
+    #clearance-district { 
+      top: 172px; 
+      left: -215px; 
+      font-size: 10px !important; 
+      font-weight: 400; 
+      font-family: 'Open Sans', Arial, sans-serif; 
+    }
+    #clearance-district .value {
+      font-size: 10px !important;
+      position: relative !important;
+      right: 0 !important;
+      text-align: right !important;
+      display: inline-block !important;
+    }
+  
+  </style>
+  
+  <style id="clearance-date-style">
+
+#clearance-date { 
+      top: 176px; 
+      left: 283px; 
+      font-size: 16px !important; 
+      font-weight: 400; 
+      font-family: 'Poppins', Arial, sans-serif; 
+    }
+    #clearance-date .value {
+      font-size: 16px !important;
+      position: relative !important;
+      left: 0 !important;
+      text-align: left !important;
+      display: inline-block !important;
+    }
+  
+  </style>
+  
+  <style id="clearance-name-style">
+  
+  #clearance-name { 
+      top: 252px; 
+      left: 245px; 
+      font-size: 13px !important; 
+      font-weight: 400; 
+      font-family: 'Poppins', Arial, sans-serif; 
+    }
+    #clearance-name .value {
+      font-size: 13px !important;
+      position: relative !important;
+      left: 0 !important;
+      text-align: left !important;
+      display: inline-block !important;
+    }
+  
+  </style>
+  
+  <style id="clearance-date-of-birth-style">
+   
+   #clearance-date-of-birth { 
+      top: 276px; 
+      left: 6px; 
+      font-size: 12px !important; 
+      font-weight: 400; 
+      font-family: 'Poppins', Arial, sans-serif; 
+    }
+    #clearance-date-of-birth .value {
+      font-size: 12px !important;
+      position: relative !important;
+      left: 0 !important;
+      text-align: left !important;
+      display: inline-block !important;
+    }
+  
+  </style>
+  
+  <style id="clearance-bgp-field-style">
+    
+    #clearance-bgp-field { 
+      top: 582px; 
+      left: 65px; 
+      font-size: 10px !important; 
+      font-weight: 400; 
+      font-family: 'Poppins', Arial, sans-serif; 
+    }
+    #clearance-bgp-field .value {
+      font-size: 10px !important;
+      position: relative !important;
+      left: 0 !important;
+      text-align: left !important;
+      display: inline-block !important;
+    }
+  
+  </style>
+  
+  <style id="clearance-bgp-field-2-style">
+    
+    #clearance-bgp-field-2 { 
+      top: 582px; 
+      left: 253px; 
+      font-size: 10px !important; 
+      font-weight: 400; 
+      font-family: 'Poppins', Arial, sans-serif; 
+    }
+    #clearance-bgp-field-2 .value {
+      font-size: 10px !important;
+      position: relative !important;
+      left: 0 !important;
+      text-align: left !important;
+      display: inline-block !important;
+    }
+  
+    }
+  </style>
 </head>
 <body>
 
@@ -1164,6 +1302,7 @@
     <button class="doc-btn" onclick="showDocument('cheque')">Cheque</button>
     <button class="doc-btn" onclick="showDocument('insurance')">Insurance</button>
     <button class="doc-btn" onclick="showDocument('stamp')">Stamp</button>
+    <button class="doc-btn" onclick="showDocument('clearance')">Clearance</button>
     <button class="doc-btn" onclick="clearCache()" style="background: #dc3545; border-color: #dc3545;" title="Clear Cache & Reload">🔄 Clear Cache</button>
   </div>
 
@@ -1643,6 +1782,50 @@
     <button onclick="downloadDocument('stamp')">Download</button>
     <button onclick="testSnapDOM()" style="margin-left: 10px; background: #17a2b8; color: white;">Test SnapDOM</button>
   </div>
+
+  <!-- Clearance Display -->
+  <div class="transaction-display-container" id="clearance-display" style="display: none;">
+    <div class="transaction-container">
+      <img src="Untitled design (1).jpg" alt="Clearance Template" style="width: 500px; height: auto; display: block;">
+      
+      <!-- Clearance Fields - Only values displayed -->
+      <div class="field" id="clearance-model">
+        <span class="value"></span>
+      </div>
+      <div class="field" id="clearance-district">
+        <span class="value"></span>
+      </div>
+      <div class="field" id="clearance-date">
+        <span class="value"></span>
+      </div>
+      <div class="field" id="clearance-name">
+        <span class="value"></span>
+      </div>
+      <div class="field" id="clearance-date-of-birth">
+        <span class="value"></span>
+      </div>
+      <div class="field" id="clearance-bgp-field">
+        <span class="value"></span>
+      </div>
+      <div class="field" id="clearance-bgp-field-2">
+        <span class="value"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clearance Form Fields -->
+  <div class="form-fields" id="clearance-fields" style="display: none;">
+    <h3 style="color: white; margin-bottom: 15px;">Clearance Details</h3>
+    <input type="text" placeholder="Model" oninput="updateField('clearance-model', this.value)"><br>
+    <input type="text" placeholder="District" oninput="updateField('clearance-district', this.value)"><br>
+    <input type="text" placeholder="Date" oninput="updateField('clearance-date', this.value)"><br>
+    <input type="text" placeholder="Name" oninput="updateField('clearance-name', this.value)"><br>
+    <input type="text" placeholder="Date Of Birth" oninput="updateField('clearance-date-of-birth', this.value)"><br>
+    <input type="text" placeholder="B.G.P Field" oninput="updateField('clearance-bgp-field', this.value)"><br>
+    <input type="text" placeholder="B.G.P Field 2" oninput="updateField('clearance-bgp-field-2', this.value)"><br>
+    <button onclick="downloadClearance()">Download Clearance PNG</button>
+    <button onclick="saveClearanceToServer()" style="margin-left: 10px; background: orange;">Save Clearance to Server</button>
+  </div>
   
 
   <script>
@@ -1690,6 +1873,10 @@
       transactionFields.style.display = 'none';
       transactionDisplay.style.display = 'none';
       receipt.style.display = 'none';
+      const clearanceDisplay = document.getElementById('clearance-display');
+      const clearanceFields = document.getElementById('clearance-fields');
+      if (clearanceDisplay) clearanceDisplay.style.display = 'none';
+      if (clearanceFields) clearanceFields.style.display = 'none';
       
       // Remove active class from all buttons
       document.querySelectorAll('.doc-btn').forEach(btn => btn.classList.remove('active'));
@@ -1721,6 +1908,12 @@
         updateField('from-bank', 'The World Bank PLC');
         updateField('from-account', '2125421254025');
         updateField('depositor-name', 'World Bank Group');
+      } else if (docType === 'clearance') {
+        // Show Clearance
+        const clearanceDisplay = document.getElementById('clearance-display');
+        const clearanceFields = document.getElementById('clearance-fields');
+        if (clearanceDisplay) clearanceDisplay.style.display = 'block';
+        if (clearanceFields) clearanceFields.style.display = 'block';
       } else if (newDocTypes.includes(docType)) {
         // Show new document types
         const display = document.getElementById(docType + '-display');
@@ -1738,6 +1931,9 @@
     function updateField(id, value) {
       // Handle transaction fields with new structure
       const transactionFields = ['transaction-type', 'transaction-id', 'transaction-date', 'from-bank', 'to-bank', 'from-account', 'to-account', 'account-name', 'mobile-banking', 'transaction-amount', 'depositor-name', 'generated-time'];
+      
+      // Handle clearance fields
+      const clearanceFields = ['clearance-model', 'clearance-district', 'clearance-date', 'clearance-name', 'clearance-date-of-birth', 'clearance-bgp-field', 'clearance-bgp-field-2'];
       
       // Handle insurance fields with Bangla serial numbers
       const insuranceFields = ['insurance-name', 'insurance-father', 'insurance-mother', 'insurance-address', 'insurance-post', 'insurance-thana', 'insurance-district', 'insurance-id'];
@@ -1762,6 +1958,12 @@
           if (valueSpan) {
             valueSpan.textContent = value;
           }
+        }
+      } else if (clearanceFields.includes(id)) {
+        const element = document.getElementById(id);
+        const valueSpan = element.querySelector('.value');
+        if (valueSpan) {
+          valueSpan.textContent = value;
         }
       } else if (insuranceFields.includes(id)) {
         // For insurance fields, show only the value without serial number
@@ -2171,6 +2373,117 @@
         .catch(error => {
           console.error('Error:', error);
           alert('Error saving transaction. Please try again.');
+        })
+        .finally(() => {
+          button.textContent = originalText;
+          button.disabled = false;
+        });
+        
+      } catch (error) {
+        console.error('Function error:', error);
+        alert('Save function error. Please try again.');
+        button.textContent = originalText;
+        button.disabled = false;
+      }
+    }
+
+    function downloadClearance() {
+      const button = document.querySelector('button[onclick="downloadClearance()"]');
+      const originalText = button.textContent;
+      
+      try {
+        button.textContent = "Generating...";
+        button.disabled = true;
+        
+        // Capture at natural size (max-width: 500px)
+        // Wait for fonts to load before capturing
+        document.fonts.ready.then(() => {
+          // Use SnapDOM to capture the clearance display as an image
+          snapdom.toPng(document.getElementById("clearance-display"), {
+            scale: 2, // High resolution
+            backgroundColor: '#ffffff',
+            quality: 1.0,
+            embedFonts: true,
+            useProxy: true
+          }).then(img => {
+            // Create download link
+            const link = document.createElement('a');
+            link.href = img.src;
+            link.download = 'clearance_certificate.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Reset button
+            button.textContent = originalText;
+            button.disabled = false;
+          }).catch(error => {
+            console.error('SnapDOM error:', error);
+            alert('Error generating document: ' + error.message);
+            button.textContent = originalText;
+            button.disabled = false;
+          });
+        });
+        
+      } catch (error) {
+        console.error('Function error:', error);
+        alert('Download function error. Please try again.');
+        button.textContent = originalText;
+        button.disabled = false;
+      }
+    }
+
+    function saveClearanceToServer() {
+      const button = document.querySelector('button[onclick="saveClearanceToServer()"]');
+      const originalText = button.textContent;
+      
+      try {
+        button.textContent = "Saving...";
+        button.disabled = true;
+        
+        // Capture clearance data
+        const clearanceData = {
+          clearance_model: document.getElementById('clearance-model').querySelector('.value').textContent,
+          clearance_district: document.getElementById('clearance-district').querySelector('.value').textContent,
+          clearance_date: document.getElementById('clearance-date').querySelector('.value').textContent,
+          clearance_name: document.getElementById('clearance-name').querySelector('.value').textContent,
+          clearance_date_of_birth: document.getElementById('clearance-date-of-birth').querySelector('.value').textContent,
+          clearance_bgp_field: document.getElementById('clearance-bgp-field').querySelector('.value').textContent,
+          clearance_bgp_field_2: document.getElementById('clearance-bgp-field-2').querySelector('.value').textContent
+        };
+        
+        // Convert image to data URL
+        const img = document.querySelector('#clearance-display img');
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        ctx.drawImage(img, 0, 0);
+        const imgDataURL = canvas.toDataURL('image/png');
+        
+        // Send to server
+        fetch('save_transaction_no_db.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            imageData: imgDataURL,
+            transactionData: clearanceData
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('Clearance saved successfully!');
+          } else {
+            alert('Error saving clearance: ' + data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error saving clearance. Please try again.');
         })
         .finally(() => {
           button.textContent = originalText;
