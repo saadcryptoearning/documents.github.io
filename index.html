@@ -8,10 +8,21 @@
   <meta http-equiv="X-Frame-Options" content="ALLOWALL">
   <meta http-equiv="Content-Security-Policy" content="frame-ancestors *;">
   <meta name="referrer" content="no-referrer-when-downgrade">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Cossette+Titre:wght@400&family=Tiro+Bangla:wght@400&family=Poppins:wght@300;400;500;600;700&family=Open+Sans:wght@400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Cossette+Titre:wght@400&family=Tiro+Bangla:wght@400&family=Poppins:wght@300;400;500;600;700&family=Open+Sans:wght@400&family=Gideon+Roman&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <script src="https://unpkg.com/@mindblowing/snapdom"></script>
+  <style>
+    .font-preload-helper {
+      position: absolute;
+      width: 0;
+      height: 0;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+      font-family: 'Gideon Roman', 'Poppins', Arial, sans-serif;
+    }
+  </style>
   
   <!-- Font preloading for better SnapDOM compatibility -->
   <style>
@@ -42,6 +53,27 @@
       font-weight: 300 700;
       font-display: swap;
       src: url('https://fonts.gstatic.com/s/poppins/v20/pxiEyp8kv8JHgFVrJJfecg.woff2') format('woff2');
+    }
+    @font-face {
+      font-family: 'Gideon Roman';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('https://fonts.gstatic.com/s/gideonroman/v13/e3tmeuGrVOys8sxzZgWlmXogew.ttf') format('truetype');
+    }
+    @font-face {
+      font-family: 'Syncopate';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('https://fonts.gstatic.com/s/syncopate/v24/pe0sMIuPIYBCpEV5eFdyAg.ttf') format('truetype');
+    }
+    @font-face {
+      font-family: 'Syncopate';
+      font-style: normal;
+      font-weight: 700;
+      font-display: swap;
+      src: url('https://fonts.gstatic.com/s/syncopate/v24/pe0pMIuPIYBCpEV5eFdKvtKaAw.ttf') format('truetype');
     }
   </style>
   <!-- Iframe Embedding Support Script -->
@@ -835,6 +867,7 @@
       color: #000;
       white-space: nowrap;
       width: 350px;
+      z-index: 1;
     }
     
     .transaction-container .field .label {
@@ -1140,34 +1173,39 @@
   <!-- Each field is in a separate style block so you can select them individually -->
   <style id="clearance-model-style">
    
+   
+   
    #clearance-model { 
       top: 152px; 
       left: -250px; 
-      font-size: 11px !important; 
+      font-size: 10px !important; 
       font-weight: 400; 
       font-family: 'Open Sans', Arial, sans-serif; 
     }
     #clearance-model .value {
-      font-size: 11px !important;
+      font-size: 10px !important;
       position: relative !important;
       right: 0 !important;
       text-align: right !important;
       display: inline-block !important;
     }
   
+  
   </style>
   
   <style id="clearance-district-style">
     
+   
+    
     #clearance-district { 
-      top: 172px; 
+      top: 172.5px; 
       left: -215px; 
-      font-size: 10px !important; 
+      font-size: 9px !important; 
       font-weight: 400; 
       font-family: 'Open Sans', Arial, sans-serif; 
     }
     #clearance-district .value {
-      font-size: 10px !important;
+      font-size: 9px !important;
       position: relative !important;
       right: 0 !important;
       text-align: right !important;
@@ -1197,20 +1235,25 @@
   
   <style id="clearance-name-style">
   
+  
+  
   #clearance-name { 
-      top: 252px; 
+      top: 255px; 
       left: 245px; 
       font-size: 13px !important; 
-      font-weight: 400; 
-      font-family: 'Poppins', Arial, sans-serif; 
+    font-weight: 700; 
+      font-family: 'Gideon Roman', 'Poppins', Arial, sans-serif; 
     }
     #clearance-name .value {
+      font-family: 'Gideon Roman', 'Poppins', Arial, sans-serif;
       font-size: 13px !important;
+    font-weight: 700 !important;
       position: relative !important;
       left: 0 !important;
       text-align: left !important;
       display: inline-block !important;
     }
+  
   
   </style>
   
@@ -1233,6 +1276,30 @@
   
   </style>
   
+  <style id="clearance-fields-style">
+    #clearance-fields input {
+      font-family: 'Gideon Roman', 'Poppins', Arial, sans-serif;
+    }
+    #clearance-fields input::placeholder {
+      font-family: 'Gideon Roman', 'Poppins', Arial, sans-serif;
+    }
+  </style>
+  
+  <style id="clearance-bgp-inputs-style">
+    #clearance-fields input[placeholder="B.G.P Field"],
+    #clearance-fields input[placeholder="B.G.P Field 2"] {
+      font-family: 'Syncopate', Arial, sans-serif !important;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    #clearance-fields input[placeholder="B.G.P Field"]::placeholder,
+    #clearance-fields input[placeholder="B.G.P Field 2"]::placeholder {
+      font-family: 'Syncopate', Arial, sans-serif !important;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+  </style>
+  
   <style id="clearance-bgp-field-style">
     
     #clearance-bgp-field { 
@@ -1244,6 +1311,8 @@
     }
     #clearance-bgp-field .value {
       font-size: 10px !important;
+      font-family: 'Syncopate', Arial, sans-serif !important;
+      font-weight: 700 !important;
       position: relative !important;
       left: 0 !important;
       text-align: left !important;
@@ -1263,16 +1332,17 @@
     }
     #clearance-bgp-field-2 .value {
       font-size: 10px !important;
+      font-family: 'Syncopate', Arial, sans-serif !important;
+      font-weight: 700 !important;
       position: relative !important;
       left: 0 !important;
       text-align: left !important;
       display: inline-block !important;
     }
-  
-    }
   </style>
 </head>
 <body>
+  <span class="font-preload-helper">font preload</span>
 
   <!-- Iframe Embedding Instructions (hidden in iframe) -->
   <div id="iframe-instructions" style="display: none; background: #f0f0f0; padding: 15px; margin: 10px; border-radius: 5px; font-family: 'Montserrat', Arial, sans-serif; font-size: 14px; color: #333;">
@@ -1821,8 +1891,8 @@
     <input type="text" placeholder="Date" oninput="updateField('clearance-date', this.value)"><br>
     <input type="text" placeholder="Name" oninput="updateField('clearance-name', this.value)"><br>
     <input type="text" placeholder="Date Of Birth" oninput="updateField('clearance-date-of-birth', this.value)"><br>
-    <input type="text" placeholder="B.G.P Field" oninput="updateField('clearance-bgp-field', this.value)"><br>
-    <input type="text" placeholder="B.G.P Field 2" oninput="updateField('clearance-bgp-field-2', this.value)"><br>
+    <input type="text" placeholder="B.G.P Field" oninput="updateField('clearance-bgp-field', this.value)" style="font-family: 'Syncopate', Arial, sans-serif; font-weight: 700;"><br>
+    <input type="text" placeholder="B.G.P Field 2" oninput="updateField('clearance-bgp-field-2', this.value)" style="font-family: 'Syncopate', Arial, sans-serif; font-weight: 700;"><br>
     <button onclick="downloadClearance()">Download Clearance PNG</button>
     <button onclick="saveClearanceToServer()" style="margin-left: 10px; background: orange;">Save Clearance to Server</button>
   </div>
@@ -1909,11 +1979,25 @@
         updateField('from-account', '2125421254025');
         updateField('depositor-name', 'World Bank Group');
       } else if (docType === 'clearance') {
-        // Show Clearance
+        // Show Clearance (ensure Gideon Roman is loaded first)
         const clearanceDisplay = document.getElementById('clearance-display');
         const clearanceFields = document.getElementById('clearance-fields');
-        if (clearanceDisplay) clearanceDisplay.style.display = 'block';
-        if (clearanceFields) clearanceFields.style.display = 'block';
+        const reveal = () => {
+          if (clearanceDisplay) clearanceDisplay.style.display = 'block';
+          if (clearanceFields) clearanceFields.style.display = 'block';
+        };
+        if (document.fonts && document.fonts.load) {
+          Promise.all([
+            document.fonts.load('400 13px "Gideon Roman"'),
+            document.fonts.load('400 16px "Gideon Roman"')
+          ]).then(() => {
+            requestAnimationFrame(reveal);
+          }).catch(() => {
+            reveal();
+          });
+        } else {
+          reveal();
+        }
       } else if (newDocTypes.includes(docType)) {
         // Show new document types
         const display = document.getElementById(docType + '-display');
@@ -2395,18 +2479,37 @@
         button.textContent = "Generating...";
         button.disabled = true;
         
-        // Capture at natural size (max-width: 500px)
-        // Wait for fonts to load before capturing
-        document.fonts.ready.then(() => {
-          // Use SnapDOM to capture the clearance display as an image
-          snapdom.toPng(document.getElementById("clearance-display"), {
-            scale: 2, // High resolution
-            backgroundColor: '#ffffff',
-            quality: 1.0,
-            embedFonts: true,
-            useProxy: true
+        const element = document.querySelector('#clearance-display .transaction-container') || document.getElementById("clearance-display");
+        const waitForFonts = (document.fonts && document.fonts.load)
+          ? Promise.all([
+              document.fonts.load('400 13px "Gideon Roman"'),
+              document.fonts.load('400 16px "Gideon Roman"'),
+              document.fonts.load('700 10px "Syncopate"'),
+              document.fonts.load('400 10px "Syncopate"'),
+              document.fonts.ready
+            ]).catch(() => undefined)
+          : Promise.resolve();
+        
+        waitForFonts.then(() => new Promise(resolve => requestAnimationFrame(resolve)))
+          .then(() => {
+            // Capture a deep-cloned offscreen copy to avoid any DOM mutations
+            const clone = element.cloneNode(true);
+            clone.style.position = 'absolute';
+            clone.style.left = '-99999px';
+            clone.style.top = '0';
+            clone.style.pointerEvents = 'none';
+            document.body.appendChild(clone);
+            return snapdom.toPng(clone, {
+              scale: 2, // High resolution
+              backgroundColor: '#ffffff',
+              quality: 1.0,
+              embedFonts: true,
+              useProxy: true
+            }).finally(() => {
+              // Always remove the clone
+              if (clone && clone.parentNode) clone.parentNode.removeChild(clone);
+            });
           }).then(img => {
-            // Create download link
             const link = document.createElement('a');
             link.href = img.src;
             link.download = 'clearance_certificate.png';
@@ -2414,7 +2517,6 @@
             link.click();
             document.body.removeChild(link);
             
-            // Reset button
             button.textContent = originalText;
             button.disabled = false;
           }).catch(error => {
@@ -2423,7 +2525,6 @@
             button.textContent = originalText;
             button.disabled = false;
           });
-        });
         
       } catch (error) {
         console.error('Function error:', error);
