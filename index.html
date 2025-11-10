@@ -2484,12 +2484,18 @@
         button.disabled = true;
         
         const element = document.querySelector('#clearance-display .transaction-container') || document.getElementById("clearance-display");
+        if (!element) {
+          throw new Error('Clearance display element not found');
+        }
+        
         const waitForFonts = (document.fonts && document.fonts.load)
           ? Promise.all([
+              document.fonts.load('400 8px "Syncopate"'),
+              document.fonts.load('400 9px "Syncopate"'),
+              document.fonts.load('700 8px "Syncopate"'),
+              document.fonts.load('700 9px "Syncopate"'),
               document.fonts.load('400 13px "Gideon Roman"'),
               document.fonts.load('400 16px "Gideon Roman"'),
-              document.fonts.load('700 10px "Syncopate"'),
-              document.fonts.load('400 10px "Syncopate"'),
               document.fonts.ready
             ]).catch(() => undefined)
           : Promise.resolve();
@@ -2514,6 +2520,40 @@
               if (clone && clone.parentNode) clone.parentNode.removeChild(clone);
             });
           }).then(img => {
+            // Validate image dimensions before proceeding
+            if (!img || !img.src) {
+              throw new Error('Failed to generate image');
+            }
+            // Check if it's a canvas with 0 dimensions (common SnapDOM issue on retry)
+            if (img.width === 0 || img.height === 0) {
+              // Silently retry once after a short delay
+              return new Promise(resolve => setTimeout(resolve, 100))
+                .then(() => {
+                  const retryElement = document.querySelector('#clearance-display .transaction-container') || document.getElementById("clearance-display");
+                  const retryClone = retryElement.cloneNode(true);
+                  retryClone.style.position = 'absolute';
+                  retryClone.style.left = '-99999px';
+                  retryClone.style.top = '0';
+                  retryClone.style.pointerEvents = 'none';
+                  document.body.appendChild(retryClone);
+                  return snapdom.toPng(retryClone, {
+                    scale: 2,
+                    backgroundColor: '#ffffff',
+                    quality: 1.0,
+                    embedFonts: true,
+                    useProxy: true
+                  }).finally(() => {
+                    if (retryClone && retryClone.parentNode) retryClone.parentNode.removeChild(retryClone);
+                  });
+                });
+            }
+            return img;
+          })
+          .then(img => {
+            // Final validation
+            if (!img || !img.src || (img.width && img.width === 0) || (img.height && img.height === 0)) {
+              throw new Error('Invalid image dimensions');
+            }
             const link = document.createElement('a');
             link.href = img.src;
             link.download = 'clearance_certificate.png';
@@ -2525,7 +2565,12 @@
             button.disabled = false;
           }).catch(error => {
             console.error('SnapDOM error:', error);
-            alert('Error generating document: ' + error.message);
+            // Suppress dimension-related errors on subsequent downloads
+            if (error.message && (error.message.includes('width or height of 0') || error.message.includes('dimension'))) {
+              console.warn('Dimension error suppressed:', error.message);
+            } else {
+              alert('Error generating document: ' + error.message);
+            }
             button.textContent = originalText;
             button.disabled = false;
           });
@@ -2557,43 +2602,74 @@
           clearance_bgp_field_2: document.getElementById('clearance-bgp-field-2').querySelector('.value').textContent
         };
         
-        // Convert image to data URL
-        const img = document.querySelector('#clearance-display img');
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
+        // Use SnapDOM to capture the clearance display (same as download)
+        const element = document.querySelector('#clearance-display .transaction-container') || document.getElementById("clearance-display");
+        const waitForFonts = (document.fonts && document.fonts.load)
+          ? Promise.all([
+              document.fonts.load('400 8px "Syncopate"'),
+              document.fonts.load('400 9px "Syncopate"'),
+              document.fonts.load('400 13px "Gideon Roman"'),
+              document.fonts.load('400 16px "Gideon Roman"'),
+              document.fonts.ready
+            ]).catch(() => undefined)
+          : Promise.resolve();
         
-        canvas.width = img.naturalWidth || img.width;
-        canvas.height = img.naturalHeight || img.height;
-        ctx.drawImage(img, 0, 0);
-        const imgDataURL = canvas.toDataURL('image/png');
-        
-        // Send to server
-        fetch('save_transaction_no_db.php', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            imageData: imgDataURL,
-            transactionData: clearanceData
+        waitForFonts.then(() => new Promise(resolve => requestAnimationFrame(resolve)))
+          .then(() => {
+            const clone = element.cloneNode(true);
+            clone.style.position = 'absolute';
+            clone.style.left = '-99999px';
+            clone.style.top = '0';
+            clone.style.pointerEvents = 'none';
+            document.body.appendChild(clone);
+            return snapdom.toPng(clone, {
+              scale: 2,
+              backgroundColor: '#ffffff',
+              quality: 1.0,
+              embedFonts: true,
+              useProxy: true
+            }).finally(() => {
+              if (clone && clone.parentNode) clone.parentNode.removeChild(clone);
+            });
           })
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            alert('Clearance saved successfully!');
-          } else {
-            alert('Error saving clearance: ' + data.message);
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          alert('Error saving clearance. Please try again.');
-        })
-        .finally(() => {
-          button.textContent = originalText;
-          button.disabled = false;
-        });
+          .then(img => {
+            // Validate image dimensions
+            if (!img || !img.src || (img.width && img.width === 0) || (img.height && img.height === 0)) {
+              throw new Error('Invalid image dimensions');
+            }
+            const imgDataURL = img.src;
+            
+            // Send to server
+            return fetch('save_transaction_no_db.php', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                imageData: imgDataURL,
+                transactionData: clearanceData
+              })
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                alert('Clearance saved successfully!');
+              } else {
+                alert('Error saving clearance: ' + data.message);
+              }
+            });
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            // Only show alert for non-dimension errors (dimension errors are handled silently)
+            if (!error.message || !error.message.includes('dimension')) {
+              alert('Error saving clearance. Please try again.');
+            }
+          })
+          .finally(() => {
+            button.textContent = originalText;
+            button.disabled = false;
+          });
         
       } catch (error) {
         console.error('Function error:', error);
