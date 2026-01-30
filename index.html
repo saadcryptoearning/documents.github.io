@@ -12,6 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <script src="https://unpkg.com/@mindblowing/snapdom"></script>
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
   <style>
     .font-preload-helper {
       position: absolute;
@@ -1853,7 +1854,7 @@
     <input type="text" placeholder="Installment" oninput="updateField('stamp-installment', this.value)" />
     <input type="text" placeholder="Father's name" oninput="updateField('stamp-father', this.value)" />
     <input type="text" placeholder="Address" oninput="updateField('stamp-address', this.value)" />
-    <button onclick="downloadDocument('stamp')">Download</button>
+    <button onclick="downloadCertificate()">Download</button>
     <button onclick="testSnapDOM()" style="margin-left: 10px; background: #17a2b8; color: white;">Test SnapDOM</button>
   </div>
 
@@ -2125,6 +2126,161 @@
       } else {
         showDocument('insurance');
       }
+    });
+
+    // Function to load image with CORS (from Stamp/index.html)
+    function loadImageWithCORS(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
+        img.src = src;
+      });
+    }
+
+    // Function to convert image to base64 (from Stamp/index.html)
+    function getBase64FromImage(img) {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      return canvas.toDataURL('image/png');
+    }
+
+    // Function to ensure all images are loaded with CORS (from Stamp/index.html)
+    async function ensureImagesLoaded() {
+      const images = document.querySelectorAll('#stamp-display img');
+      for (const img of images) {
+        if (!img.src.startsWith('data:') && img.src) {
+          try {
+            const loadedImg = await loadImageWithCORS(img.src);
+            img.src = getBase64FromImage(loadedImg);
+          } catch (error) {
+            console.error('Error loading image:', error);
+            throw error;
+          }
+        }
+      }
+    }
+
+    // Download certificate function for stamp (from Stamp/index.html)
+    async function downloadCertificate() {
+      const downloadBtn = document.querySelector('#stamp-form button[onclick="downloadDocument(\'stamp\')"]') || 
+                          document.querySelector('#stamp-form button');
+      const originalText = downloadBtn ? downloadBtn.textContent : 'Download';
+      
+      try {
+        // Show loading state
+        if (downloadBtn) {
+          downloadBtn.textContent = 'Preparing Images...';
+          downloadBtn.disabled = true;
+        }
+
+        // Get the stamp display element
+        const stampDisplay = document.getElementById('stamp-display');
+        if (!stampDisplay) {
+          throw new Error('Stamp display element not found');
+        }
+
+        // Find the background div with stamp.JPG
+        const bgDiv = stampDisplay.querySelector('div[style*="stamp.JPG"]');
+        if (bgDiv) {
+          // Load and convert background image
+          const bgImage = await loadImageWithCORS('stamp.JPG');
+          const bgBase64 = getBase64FromImage(bgImage);
+          bgDiv.style.backgroundImage = `url(${bgBase64})`;
+        }
+
+        // Ensure all other images are loaded with CORS
+        await ensureImagesLoaded();
+
+        if (downloadBtn) {
+          downloadBtn.textContent = 'Generating Certificate...';
+        }
+
+        // Get the stamp display container
+        const stampContainer = stampDisplay.querySelector('.transaction-container') || stampDisplay;
+
+        // Use html2canvas to capture the certificate
+        const canvas = await html2canvas(stampContainer, {
+          scale: 2, // Higher quality
+          useCORS: true, // Enable CORS
+          allowTaint: false, // Don't allow tainted canvas
+          backgroundColor: '#ffffff',
+          logging: true, // Enable logging for debugging
+          imageTimeout: 15000, // 15 second timeout
+          onclone: function (clonedDoc) {
+            // Ensure all images are visible in the cloned document
+            const images = clonedDoc.querySelectorAll('#stamp-display img');
+            for (let img of images) {
+              img.style.opacity = '1';
+              img.style.visibility = 'visible';
+              img.style.display = 'block';
+            }
+          }
+        });
+
+        if (downloadBtn) {
+          downloadBtn.textContent = 'Creating Download...';
+        }
+
+        // Convert canvas to blob with maximum quality
+        canvas.toBlob(function (blob) {
+          if (!blob) {
+            throw new Error('Failed to create image blob');
+          }
+
+          // Create download link
+          const link = document.createElement('a');
+          link.download = 'loan-certificate.png';
+          link.href = URL.createObjectURL(blob);
+
+          // Trigger download
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+
+          // Clean up
+          URL.revokeObjectURL(link.href);
+
+          // Reset button state
+          if (downloadBtn) {
+            downloadBtn.textContent = originalText;
+            downloadBtn.disabled = false;
+          }
+        }, 'image/png', 1.0);
+
+      } catch (error) {
+        console.error('Error generating certificate:', error);
+
+        // Reset button state
+        if (downloadBtn) {
+          downloadBtn.textContent = originalText;
+          downloadBtn.disabled = false;
+        }
+
+        // Show more specific error message
+        if (error.message.includes('Failed to load image')) {
+          alert('Error: One or more images failed to load. Please check if all image files (stamp.JPG, loanapprove.png, signature image) are present and accessible.');
+        } else if (error.message.includes('blob')) {
+          alert('Error: Failed to generate image. Please try again.');
+        } else {
+          alert('Error generating certificate: ' + error.message);
+        }
+      }
+    }
+
+    // Add error handling for image loading (from Stamp/index.html)
+    document.addEventListener('DOMContentLoaded', function () {
+      const stampImages = document.querySelectorAll('#stamp-display img');
+      stampImages.forEach(img => {
+        img.crossOrigin = "anonymous"; // Set CORS for all images
+        img.onerror = function () {
+          console.error('Failed to load image:', img.src);
+        };
+      });
     });
 
     function downloadDocument(docType) {
