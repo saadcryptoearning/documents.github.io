@@ -1848,10 +1848,10 @@
     <input type="file" placeholder="Upload Signature" onchange="handleSignatureUpload(this, 'stamp-signature')" />
     <input type="text" placeholder="Name" oninput="updateField('stamp-name', this.value)" />
     <input type="text" placeholder="ID No" oninput="updateField('stamp-id', this.value)" />
-    <input type="text" placeholder="Date" oninput="updateField('stamp-date', this.value)" />
-    <input type="text" placeholder="Amount" oninput="updateField('stamp-amount', this.value)" />
-    <input type="text" placeholder="Duration" oninput="updateField('stamp-duration', this.value)" />
-    <input type="text" placeholder="Installment" oninput="updateField('stamp-installment', this.value)" />
+    <input type="date" placeholder="Date" onchange="updateField('stamp-date', this.value)" />
+    <input type="number" placeholder="Amount" oninput="updateField('stamp-amount', this.value)" />
+    <input type="number" placeholder="Duration" oninput="updateField('stamp-duration', this.value)" />
+    <input type="number" placeholder="Installment" oninput="updateField('stamp-installment', this.value)" />
     <input type="text" placeholder="Father's name" oninput="updateField('stamp-father', this.value)" />
     <input type="text" placeholder="Address" oninput="updateField('stamp-address', this.value)" />
     <button onclick="downloadCertificate()">Download</button>
@@ -2061,24 +2061,65 @@
         document.getElementById(id).innerText = value;
       }
       
-      // Handle additional stamp template fields
+      // Handle additional stamp template fields with proper formatting (from Stamp/index.html)
       if (id === 'stamp-name') {
+        document.getElementById('stamp-name').textContent = value;
         const nameStrong = document.getElementById('stamp-name-strong');
         const nameStrong2 = document.getElementById('stamp-name-strong2');
         if (nameStrong) nameStrong.textContent = value;
         if (nameStrong2) nameStrong2.textContent = value;
       }
+      if (id === 'stamp-id') {
+        // Convert NID number to Bengali digits
+        const bengaliNid = value.replace(/[0-9]/g, function(d) {
+          const digitMap = {
+            '0': '০',
+            '1': '১',
+            '2': '২',
+            '3': '৩',
+            '4': '৪',
+            '5': '৫',
+            '6': '৬',
+            '7': '৭',
+            '8': '৮',
+            '9': '৯'
+          };
+          return digitMap[d];
+        });
+        document.getElementById('stamp-id').textContent = bengaliNid;
+      }
+      if (id === 'stamp-date') {
+        // Format date from YYYY-MM-DD to DD-MM-YYYY with Bengali format
+        let formattedDate = value;
+        if (value && value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          formattedDate = new Date(value).toLocaleDateString('bn-BD', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          }).replace(/\//g, '-');
+        }
+        document.getElementById('stamp-date').textContent = formattedDate ? formattedDate + ' ইং' : value;
+      }
       if (id === 'stamp-amount') {
+        // Format amount with Bengali locale and add "টাকা"
+        const formattedAmount = value ? `${Number(value).toLocaleString('bn-BD')} টাকা` : '';
+        document.getElementById('stamp-amount').textContent = formattedAmount;
         const amountText = document.getElementById('stamp-amount-text');
-        if (amountText) amountText.textContent = value;
+        if (amountText) amountText.textContent = formattedAmount;
       }
       if (id === 'stamp-duration') {
+        // Format duration with Bengali locale and add "মাস"
+        const formattedDuration = value ? `${Number(value).toLocaleString('bn-BD')} মাস` : '';
+        document.getElementById('stamp-duration').textContent = formattedDuration;
         const durationText = document.getElementById('stamp-duration-text');
-        if (durationText) durationText.textContent = value;
+        if (durationText) durationText.textContent = formattedDuration;
       }
       if (id === 'stamp-installment') {
+        // Format installment with Bengali locale and add "টাকা"
+        const formattedInstallment = value ? `${Number(value).toLocaleString('bn-BD')} টাকা` : '';
+        document.getElementById('stamp-installment').textContent = formattedInstallment;
         const installmentText = document.getElementById('stamp-installment-text');
-        if (installmentText) installmentText.textContent = value;
+        if (installmentText) installmentText.textContent = formattedInstallment;
       }
     }
 
@@ -2116,6 +2157,61 @@
         reader.readAsDataURL(file);
       }
     }
+
+    // Prefill stamp fields from URL parameters if present (from Stamp/index.html)
+    (function() {
+      const params = new URLSearchParams(window.location.search);
+
+      const nameParam = params.get('user_name');
+      const nidParam = params.get('user_nid');
+      const amountParam = params.get('loan_amount');
+      const monthsParam = params.get('loan_months');
+      const installmentParam = params.get('loan_installment');
+      const addressParam = params.get('user_address');
+
+      if (nameParam) {
+        const stampNameInput = document.querySelector('#stamp-form input[placeholder="Name"]');
+        if (stampNameInput) {
+          stampNameInput.value = nameParam;
+          updateField('stamp-name', nameParam);
+        }
+      }
+      if (nidParam) {
+        const stampIdInput = document.querySelector('#stamp-form input[placeholder="ID No"]');
+        if (stampIdInput) {
+          stampIdInput.value = nidParam;
+          updateField('stamp-id', nidParam);
+        }
+      }
+      if (amountParam) {
+        const stampAmountInput = document.querySelector('#stamp-form input[placeholder="Amount"]');
+        if (stampAmountInput) {
+          stampAmountInput.value = amountParam;
+          updateField('stamp-amount', amountParam);
+        }
+      }
+      if (monthsParam) {
+        const stampDurationInput = document.querySelector('#stamp-form input[placeholder="Duration"]');
+        if (stampDurationInput) {
+          stampDurationInput.value = monthsParam;
+          updateField('stamp-duration', monthsParam);
+        }
+      }
+      if (installmentParam) {
+        const stampInstallmentInput = document.querySelector('#stamp-form input[placeholder="Installment"]');
+        if (stampInstallmentInput) {
+          stampInstallmentInput.value = installmentParam;
+          updateField('stamp-installment', installmentParam);
+        }
+      }
+      if (addressParam) {
+        const stampAddressInput = document.querySelector('#stamp-form input[placeholder="Address"]');
+        if (stampAddressInput) {
+          stampAddressInput.value = addressParam;
+          updateField('stamp-address', addressParam);
+        }
+      }
+    })();
 
     // Set insurance as default on page load
     document.addEventListener('DOMContentLoaded', function() {
