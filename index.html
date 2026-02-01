@@ -2114,25 +2114,34 @@
         document.getElementById('stamp-date').textContent = formattedDate ? formattedDate + ' ইং' : value;
       }
       if (id === 'stamp-amount') {
-        // Format amount with Bengali locale (no automatic unit addition)
-        const formattedAmount = value ? Number(value).toLocaleString('bn-BD') : '';
+        // Format amount with Bengali locale and add "টাকা"
+        // Remove any existing "টাকা" text to prevent duplication
+        const numericValue = value ? value.toString().replace(/টাকা/g, '').trim() : '';
+        const formattedAmount = numericValue ? `${Number(numericValue).toLocaleString('bn-BD')} টাকা` : '';
         document.getElementById('stamp-amount').textContent = formattedAmount;
+        // For paragraph text, only show the number (unit is already in HTML)
         const amountText = document.getElementById('stamp-amount-text');
-        if (amountText) amountText.textContent = formattedAmount;
+        if (amountText) amountText.textContent = numericValue ? Number(numericValue).toLocaleString('bn-BD') : '';
       }
       if (id === 'stamp-duration') {
-        // Format duration with Bengali locale (no automatic unit addition)
-        const formattedDuration = value ? Number(value).toLocaleString('bn-BD') : '';
+        // Format duration with Bengali locale and add "মাস"
+        // Remove any existing "মাস" text to prevent duplication
+        const numericValue = value ? value.toString().replace(/মাস/g, '').trim() : '';
+        const formattedDuration = numericValue ? `${Number(numericValue).toLocaleString('bn-BD')} মাস` : '';
         document.getElementById('stamp-duration').textContent = formattedDuration;
+        // For paragraph text, only show the number (unit is already in HTML)
         const durationText = document.getElementById('stamp-duration-text');
-        if (durationText) durationText.textContent = formattedDuration;
+        if (durationText) durationText.textContent = numericValue ? Number(numericValue).toLocaleString('bn-BD') : '';
       }
       if (id === 'stamp-installment') {
-        // Format installment with Bengali locale (no automatic unit addition)
-        const formattedInstallment = value ? Number(value).toLocaleString('bn-BD') : '';
+        // Format installment with Bengali locale and add "টাকা"
+        // Remove any existing "টাকা" text to prevent duplication
+        const numericValue = value ? value.toString().replace(/টাকা/g, '').trim() : '';
+        const formattedInstallment = numericValue ? `${Number(numericValue).toLocaleString('bn-BD')} টাকা` : '';
         document.getElementById('stamp-installment').textContent = formattedInstallment;
+        // For paragraph text, only show the number (unit is already in HTML)
         const installmentText = document.getElementById('stamp-installment-text');
-        if (installmentText) installmentText.textContent = formattedInstallment;
+        if (installmentText) installmentText.textContent = numericValue ? Number(numericValue).toLocaleString('bn-BD') : '';
       }
     }
 
