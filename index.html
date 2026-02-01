@@ -1786,14 +1786,15 @@
                   <p style="color: #000; font-size: 22px; margin: 0;">ঋণ গ্রহীতার স্বাক্ষর</p>
                 </div>
               </div>
-              
-              <!-- Note -->
-              <div style="margin-top: 30px; text-align: center;">
-                <p style="font-size: 23px; font-weight: 400; color: #000; margin: 0; font-style: italic;">বিঃদ্রঃ ঋণের শর্তাবলী পালন না করলে ব্যাংক কর্তৃপক্ষ আইনানুগ ব্যবস্থা নিতে বাধ্য থাকিবে।</p>
-              </div>
             </div>
           </div>
         </div>
+        
+        <!-- Note -->
+        <div style="position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); width: 90%; text-align: center; z-index: 10;">
+          <p style="font-size: 23px; font-weight: 400; color: #000; margin: 0; font-style: italic;">বিঃদ্রঃ ঋণের শর্তাবলী পালন না করলে ব্যাংক কর্তৃপক্ষ আইনানুগ ব্যবস্থা নিতে বাধ্য থাকিবে।</p>
+        </div>
+      </div>
       </div>
     </div>
   </div>
@@ -2113,22 +2114,22 @@
         document.getElementById('stamp-date').textContent = formattedDate ? formattedDate + ' ইং' : value;
       }
       if (id === 'stamp-amount') {
-        // Format amount with Bengali locale and add "টাকা"
-        const formattedAmount = value ? `${Number(value).toLocaleString('bn-BD')} টাকা` : '';
+        // Format amount with Bengali locale (no automatic unit addition)
+        const formattedAmount = value ? Number(value).toLocaleString('bn-BD') : '';
         document.getElementById('stamp-amount').textContent = formattedAmount;
         const amountText = document.getElementById('stamp-amount-text');
         if (amountText) amountText.textContent = formattedAmount;
       }
       if (id === 'stamp-duration') {
-        // Format duration with Bengali locale and add "মাস"
-        const formattedDuration = value ? `${Number(value).toLocaleString('bn-BD')} মাস` : '';
+        // Format duration with Bengali locale (no automatic unit addition)
+        const formattedDuration = value ? Number(value).toLocaleString('bn-BD') : '';
         document.getElementById('stamp-duration').textContent = formattedDuration;
         const durationText = document.getElementById('stamp-duration-text');
         if (durationText) durationText.textContent = formattedDuration;
       }
       if (id === 'stamp-installment') {
-        // Format installment with Bengali locale and add "টাকা"
-        const formattedInstallment = value ? `${Number(value).toLocaleString('bn-BD')} টাকা` : '';
+        // Format installment with Bengali locale (no automatic unit addition)
+        const formattedInstallment = value ? Number(value).toLocaleString('bn-BD') : '';
         document.getElementById('stamp-installment').textContent = formattedInstallment;
         const installmentText = document.getElementById('stamp-installment-text');
         if (installmentText) installmentText.textContent = formattedInstallment;
